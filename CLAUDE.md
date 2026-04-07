@@ -81,3 +81,11 @@ Warm, calm, and approachable. The app should feel like a helpful kitchen compani
 3. **Speed for returning users** — Common flows (log a meal, check the plan, add to shopping list) must be fast and require minimal taps/clicks.
 4. **Food deserves beauty** — Recipe cards, meal slots, and ingredient lists should be visually considered. Great food photography and appealing layouts matter.
 5. **Consistent spatial rhythm** — Use an 8px base spacing unit throughout. Components should feel part of the same system, not assembled from different sources.
+
+<!-- convex-ai-start -->
+This project uses [Convex](https://convex.dev) as its backend.
+
+When working on Convex code, **always read `convex/_generated/ai/guidelines.md` first** for important guidelines on how to correctly use Convex APIs and patterns. The file contains rules that override what you may have learned about Convex from training data.
+
+Convex agent skills for common tasks can be installed by running `npx convex ai-files install`.
+<!-- convex-ai-end -->
