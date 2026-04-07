@@ -1,100 +1,96 @@
 # Meal Prep App — Roadmap
 
-## Feature List
+## The Core Loop
 
-### Core Features
-1. **Recipe Library** — Create, edit, delete recipes with ingredients, steps, servings, prep/cook time, and tags
-2. **Weekly Meal Planner** — Drag-and-drop calendar to assign recipes to breakfast/lunch/dinner/snack slots per day
-3. **Meal Prep Sessions** — Plan a batch cooking session from a meal plan: see what to cook, in what order, with scaled quantities
-4. **Shopping List** — Auto-generate from meal plan (with deduplication + quantity merging); manual items; check off while shopping; organize by store section
-5. **Pantry Inventory** — Track what you have; subtract from shopping list generation; expiration date warnings
-6. **Nutrition Tracking** — Log what you actually ate; daily calorie/macro summary; weekly charts; goal setting
-7. **Recipe Import** — Paste a URL and scrape recipe data (via Convex action + external parser)
-8. **User Auth** — Sign up/login; all data is per-user
+```
+Add recipes → Plan the week → Buy ingredients → Cook
+```
 
-### Nice to Have
-9. **Recipe Scaling** — Adjust servings dynamically; quantities update throughout
-10. **Dietary Filters** — Tag recipes (vegan, gluten-free, etc.) and filter throughout the app
-11. **Cost Tracking** — Attach prices to pantry/shopping items; estimate weekly grocery cost
-12. **Meal Templates** — Save a week plan as a reusable template
-13. **Sharing** — Share a recipe or shopping list via link (read-only)
-14. **Mobile PWA** — Installable, offline-capable for use while shopping
+Everything in this app serves these four steps.
 
 ---
 
-## Phase 1 — Foundation (MVP)
-**Goal**: Working app with recipes + meal plan + shopping list
+## Phase 1 — The Core Loop (MVP)
+**Goal**: A working app where you can plan a week and walk out the door with a shopping list.
 
-- [ ] Project scaffolding (Vite + React + TS + Tailwind + shadcn/ui)
-- [ ] Convex setup: schema, auth
-- [ ] Recipe CRUD (create, list, view, edit, delete)
-  - Fields: title, description, servings, prep time, cook time, ingredients (name + qty + unit), steps, tags, image
-- [ ] Weekly Meal Planner
-  - 7-day grid, 4 slots per day
-  - Assign/remove recipes per slot
+- [ ] Basic layout: sidebar nav + page shell
+- [ ] Recipe Library
+  - Add a recipe manually (title, ingredients, servings, prep/cook time, steps)
+  - View, edit, delete recipes
+  - Recipe cards with warm visual design
+- [ ] Recipe import from URL
+  - Paste any recipe website URL → app fills in the fields automatically
+  - User reviews and saves
+- [ ] Weekly Planner
+  - 7-day grid with breakfast / lunch / dinner / snack slots
+  - Click a slot → pick a recipe → set servings
   - Navigate between weeks
-- [ ] Shopping List generation
-  - Derive from current week's plan
-  - Merge duplicate ingredients across recipes
-  - Check-off items
-  - Manual add/remove
-- [ ] Basic UI layout: sidebar nav, responsive grid
+- [ ] Shopping List
+  - Auto-generated from the current week's plan
+  - Quantities merged across recipes (e.g. 3 recipes needing olive oil → one line item)
+  - Check off items while shopping
+  - Manually add/remove items
 
-**Deliverable**: User can plan a week of meals and get a shopping list
+**Deliverable**: Plan a week, get a shopping list, go shopping.
 
 ---
 
-## Phase 2 — Prep & Pantry
-**Goal**: Batch cooking planning + inventory management
+## Phase 2 — Your Data
+**Goal**: Make the app personal — your recipes, your plan, your macros.
 
-- [ ] Prep Session planner
-  - Select a week → see all distinct recipes → order by cook time/oven use
-  - Mark steps as done
-  - Estimated total prep time
-- [ ] Pantry Inventory
-  - Add/edit/delete items with quantities and optional expiry date
-  - Mark items as "in pantry" to auto-subtract from shopping list
-  - Expiry warnings (within 3 days)
+- [ ] Auth (sign up / log in)
+  - All data becomes per-user
+- [ ] Nutrition data on recipes
+  - Add calories, protein, carbs, fat per serving (manual entry)
+- [ ] Daily food log
+  - "What did I eat today?" — pull from planned meals with one tap
+  - See daily calorie/macro totals
+- [ ] Macro goals
+  - Set daily targets; see progress vs. goal
+
+**Deliverable**: Your own account, your own data, basic nutrition awareness.
+
+---
+
+## Phase 3 — Smarter Shopping
+**Goal**: Stop buying things you already have.
+
+- [ ] Pantry inventory
+  - Track what's in your kitchen (name, quantity, unit)
+  - Optional expiry date with warnings
 - [ ] Shopping list improvements
-  - "Already have" items grayed out based on pantry
+  - Items you have in the pantry are grayed out / skipped
   - Organize by category (Produce, Dairy, Meat, Dry Goods, etc.)
+- [ ] Recipe serving scaler
+  - Adjust servings on any recipe → all ingredient quantities update throughout the app
 
-**Deliverable**: Full prep workflow from plan → cook → track what's in the fridge
-
----
-
-## Phase 3 — Nutrition & Tracking
-**Goal**: Close the loop on what was actually eaten
-
-- [ ] Nutrition data on recipes (manual entry: calories, protein, carbs, fat per serving)
-- [ ] Daily food log: log a meal from recipes or free-text
-- [ ] Dashboard: today's macros vs. goals, weekly summary chart
-- [ ] User goals: set daily calorie + macro targets
-- [ ] Nutrition source: optional integration with Open Food Facts API
-
-**Deliverable**: Nutrition awareness without being a dedicated calorie counter
+**Deliverable**: Smarter, faster shopping.
 
 ---
 
-## Phase 4 — Polish & Power Features
-**Goal**: Make the app delightful and shareable
+## Phase 4 — Polish & Power
+**Goal**: Make the app delightful and shareable.
 
-- [ ] Recipe import from URL (scrape + parse via Convex action)
-- [ ] Recipe scaling (adjust servings → scale all ingredients)
-- [ ] Meal plan templates (save & reuse a week)
-- [ ] Shareable recipe links (public read-only view)
-- [ ] PWA manifest + service worker for mobile/offline
-- [ ] Cost tracking (price per item, weekly estimate)
-- [ ] Dietary tags & filtering across all recipe lists
+- [ ] Meal plan templates — save a week and reuse it
+- [ ] Dietary tags & filters — vegan, gluten-free, etc.
+- [ ] Shareable recipe links — public read-only view
+- [ ] Mobile PWA — installable, works offline while shopping
 
 ---
 
-## Tech Decisions Log
+## Cut (revisit only if users ask)
+- Meal Prep Sessions (cook order planner) — adds complexity, low usage expected
+- Cost tracking — nice idea, rarely maintained in practice
 
-| Decision | Choice | Reason |
+---
+
+## Tech Stack
+
+| Layer | Choice | Why |
 |---|---|---|
-| Frontend | Vite + React + TS | Fast DX, broad ecosystem |
-| Backend | Convex | Real-time, schema-typed, no separate API layer needed |
-| Styling | Tailwind + shadcn/ui | Rapid UI with accessible components |
+| Frontend | Vite + React + TypeScript | Fast, widely supported |
+| Backend & DB | Convex | Real-time, no separate API needed |
+| Styling | Tailwind + shadcn/ui | Consistent, accessible components |
 | Auth | Convex Auth | Native integration, simplest setup |
-| Recipe nutrition | Manual first, API later | Avoids complexity in Phase 1 |
+| Recipe import | Convex action + recipe parser API | Server-side scraping, clean separation |
+| Nutrition (Phase 1) | Manual entry | Simple first, API later if needed |
