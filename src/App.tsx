@@ -1,10 +1,23 @@
+import { Routes, Route } from 'react-router-dom'
+import { Layout } from '@/components/Layout'
+import { Today } from '@/pages/Today'
+import { MealPlan } from '@/pages/MealPlan'
+import { Recipes } from '@/pages/Recipes'
+import { RecipeDetail } from '@/pages/RecipeDetail'
+import { ShoppingList } from '@/pages/ShoppingList'
+import { Profile } from '@/pages/Profile'
+
 export default function App() {
   return (
-    <div className="min-h-screen flex items-center justify-center">
-      <div className="text-center space-y-2">
-        <h1 className="text-3xl font-semibold text-stone-800">Meal Prep</h1>
-        <p className="text-stone-500">Scaffold ready — connecting Convex next.</p>
-      </div>
-    </div>
+    <Routes>
+      <Route element={<Layout />}>
+        <Route index element={<Today />} />
+        <Route path="meal-plan" element={<MealPlan />} />
+        <Route path="recipes" element={<Recipes />} />
+        <Route path="recipes/:id" element={<RecipeDetail />} />
+        <Route path="shopping-list" element={<ShoppingList />} />
+        <Route path="profile" element={<Profile />} />
+      </Route>
+    </Routes>
   )
 }
