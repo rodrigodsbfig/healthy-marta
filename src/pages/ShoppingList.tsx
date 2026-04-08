@@ -1,43 +1,9 @@
 import { useState } from 'react'
-import { Plus } from 'lucide-react'
+import { useQuery, useMutation } from 'convex/react'
+import { Plus, RefreshCw, Trash2, ShoppingCart } from 'lucide-react'
+import { api } from '../../convex/_generated/api'
 import { cn } from '@/lib/utils'
-
-type Item = { name: string; amount: string; checked: boolean }
-
-const initialCategories: { label: string; items: Item[] }[] = [
-  {
-    label: 'Produce',
-    items: [
-      { name: 'Cherry tomatoes', amount: '250g',  checked: true },
-      { name: 'Onion',           amount: '200g',  checked: false },
-      { name: 'Asparagus',       amount: '300g',  checked: false },
-      { name: 'Blueberries',     amount: '90g',   checked: false },
-    ],
-  },
-  {
-    label: 'Pantry',
-    items: [
-      { name: 'Butter',          amount: '110g',  checked: true },
-      { name: 'Salt',            amount: '5g',    checked: false },
-      { name: 'Cooking oil',     amount: '50ml',  checked: false },
-    ],
-  },
-  {
-    label: 'Protein',
-    items: [
-      { name: 'Salmon fillet',   amount: '300g',  checked: true },
-      { name: 'Chicken breast',  amount: '400g',  checked: false },
-      { name: 'Eggs',            amount: '3',     checked: false },
-    ],
-  },
-  {
-    label: 'Dairy & Eggs',
-    items: [
-      { name: 'Greek yogurt',    amount: '300g',  checked: false },
-      { name: 'Feta cheese',     amount: '100g',  checked: false },
-    ],
-  },
-]
+import { getWeekStart, formatShort, weekDays } from '@/lib/dates'
 
 function CheckIcon({ checked }: { checked: boolean }) {
   return (
@@ -55,22 +21,56 @@ function CheckIcon({ checked }: { checked: boolean }) {
 }
 
 export function ShoppingList() {
-  const [categories, setCategories] = useState(initialCategories)
+  const weekStart = getWeekStart()
+  const days = weekDays(weekStart)
+  const weekLabel = `${formatShort(days[0])} – ${formatShort(days[6])}`
 
-  const totalItems   = categories.flatMap(c => c.items).length
-  const checkedItems = categories.flatMap(c => c.items).filter(i => i.checked).length
+  const list = useQuery(api.functions.shoppingLists.getByWeek, { weekStart })
+  const generateFromPlan = useMutation(api.functions.shoppingLists.generateFromPlan)
+  const toggleItem = useMutation(api.functions.shoppingLists.toggleItem)
+  const addManualItem = useMutation(api.functions.shoppingLists.addManualItem)
+  const removeItem = useMutation(api.functions.shoppingLists.removeItem)
 
-  function toggle(catIdx: number, itemIdx: number) {
-    setCategories(prev =>
-      prev.map((cat, ci) =>
-        ci !== catIdx ? cat : {
-          ...cat,
-          items: cat.items.map((item, ii) =>
-            ii !== itemIdx ? item : { ...item, checked: !item.checked }
-          ),
-        }
-      )
-    )
+  const [addingItem, setAddingItem] = useState(false)
+  const [newName, setNewName] = useState('')
+  const [newQty, setNewQty] = useState('')
+  const [newUnit, setNewUnit] = useState('g')
+  const [generating, setGenerating] = useState(false)
+
+  const items = list?.items ?? []
+  const checked = items.filter(i => i.checked).length
+
+  // Group items by category
+  const categories = Array.from(
+    items.reduce((map, item, idx) => {
+      const cat = item.category ?? 'Other'
+      if (!map.has(cat)) map.set(cat, [])
+      map.get(cat)!.push({ ...item, idx })
+      return map
+    }, new Map<string, (typeof items[number] & { idx: number })[]>())
+  )
+
+  async function handleGenerate() {
+    setGenerating(true)
+    try {
+      await generateFromPlan({ weekStart })
+    } finally {
+      setGenerating(false)
+    }
+  }
+
+  async function handleAddManual() {
+    if (!newName.trim()) return
+    await addManualItem({
+      weekStart,
+      name: newName.trim(),
+      quantity: Number(newQty) || 1,
+      unit: newUnit || 'piece',
+    })
+    setNewName('')
+    setNewQty('')
+    setNewUnit('g')
+    setAddingItem(false)
   }
 
   return (
@@ -79,63 +79,153 @@ export function ShoppingList() {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="font-display font-bold text-2xl text-[#2D1F3D]">Shopping List</h1>
-          <p className="text-sm text-[#7A6775] mt-0.5">Apr 7 – 13 · from meal plan</p>
+          <p className="text-sm text-[#7A6775] mt-0.5">{weekLabel} · from meal plan</p>
         </div>
-        <div className="flex items-center gap-4">
-          <span className="text-sm text-[#7A6775]">
-            <span className="font-semibold text-[#7B5EA7]">{checkedItems}</span> of {totalItems} items
-          </span>
+        <div className="flex items-center gap-3">
+          {items.length > 0 && (
+            <span className="text-sm text-[#7A6775]">
+              <span className="font-semibold text-[#7B5EA7]">{checked}</span> of {items.length} items
+            </span>
+          )}
+          <button
+            onClick={handleGenerate}
+            disabled={generating}
+            className="flex items-center gap-2 border border-[#E8D9C8] text-[#7A6775] text-sm font-semibold px-4 py-2 rounded-full hover:bg-[#F5EDE0] transition-colors disabled:opacity-50"
+          >
+            <RefreshCw size={14} className={generating ? 'animate-spin' : ''} />
+            {generating ? 'Generating…' : 'Generate from plan'}
+          </button>
         </div>
       </div>
 
       {/* Progress bar */}
-      <div className="w-full h-2 bg-[#EEE0FF] rounded-full">
-        <div
-          className="h-2 bg-[#7B5EA7] rounded-full transition-all"
-          style={{ width: `${(checkedItems / totalItems) * 100}%` }}
-        />
-      </div>
+      {items.length > 0 && (
+        <div className="w-full h-2 bg-[#EEE0FF] rounded-full">
+          <div
+            className="h-2 bg-[#7B5EA7] rounded-full transition-all"
+            style={{ width: `${items.length ? (checked / items.length) * 100 : 0}%` }}
+          />
+        </div>
+      )}
 
-      {/* Categories grid */}
-      <div className="grid grid-cols-2 gap-4">
-        {categories.map((cat, ci) => (
-          <div key={cat.label} className="bg-white rounded-2xl p-5 shadow-[0_4px_20px_0_#7B5EA714]">
-            <h3 className="text-[12px] font-semibold text-[#7A6775] uppercase tracking-wider mb-3">
-              {cat.label}
-            </h3>
-            <ul className="space-y-3">
-              {cat.items.map((item, ii) => (
-                <li
-                  key={item.name}
-                  className="flex items-center gap-3 cursor-pointer group"
-                  onClick={() => toggle(ci, ii)}
-                >
-                  <CheckIcon checked={item.checked} />
-                  <span className={cn(
-                    'flex-1 text-sm transition-colors',
-                    item.checked ? 'text-[#7A6775] line-through' : 'text-[#2D1F3D]',
-                  )}>
-                    {item.name}
-                  </span>
-                  <span className={cn(
-                    'text-[12px]',
-                    item.checked ? 'text-[#E8D9C8]' : 'text-[#7A6775]',
-                  )}>
-                    {item.amount}
-                  </span>
-                </li>
-              ))}
-            </ul>
+      {/* Empty state */}
+      {list !== undefined && items.length === 0 && (
+        <div className="py-20 text-center">
+          <div className="w-16 h-16 bg-[#EEE0FF] rounded-2xl flex items-center justify-center mx-auto mb-4">
+            <ShoppingCart size={28} className="text-[#7B5EA7]" />
           </div>
-        ))}
-      </div>
+          <h3 className="font-display font-bold text-base text-[#2D1F3D] mb-1">No items yet</h3>
+          <p className="text-sm text-[#7A6775] mb-5">
+            Plan your meals first, then generate your shopping list.
+          </p>
+          <button
+            onClick={handleGenerate}
+            disabled={generating}
+            className="bg-[#7B5EA7] text-white text-sm font-semibold px-5 py-2.5 rounded-full hover:bg-[#6a4e94] transition-colors disabled:opacity-50"
+          >
+            {generating ? 'Generating…' : 'Generate from meal plan'}
+          </button>
+        </div>
+      )}
 
-      {/* Add item */}
+      {/* Category groups */}
+      {categories.length > 0 && (
+        <div className="grid grid-cols-2 gap-4">
+          {categories.map(([category, catItems]) => (
+            <div key={category} className="bg-white rounded-2xl p-5 shadow-[0_4px_20px_0_#7B5EA714]">
+              <h3 className="text-[12px] font-semibold text-[#7A6775] uppercase tracking-wider mb-3">
+                {category}
+              </h3>
+              <ul className="space-y-3">
+                {catItems.map(item => (
+                  <li key={item.idx} className="flex items-center gap-3 group">
+                    <button
+                      onClick={() => toggleItem({ weekStart, index: item.idx })}
+                      className="shrink-0"
+                    >
+                      <CheckIcon checked={item.checked} />
+                    </button>
+                    <span className={cn(
+                      'flex-1 text-sm transition-colors',
+                      item.checked ? 'text-[#7A6775] line-through' : 'text-[#2D1F3D]',
+                    )}>
+                      {item.name}
+                    </span>
+                    <span className={cn(
+                      'text-[12px] shrink-0',
+                      item.checked ? 'text-[#E8D9C8]' : 'text-[#7A6775]',
+                    )}>
+                      {item.quantity} {item.unit}
+                    </span>
+                    {item.manual && (
+                      <button
+                        onClick={() => removeItem({ weekStart, index: item.idx })}
+                        className="opacity-0 group-hover:opacity-100 text-[#E8D9C8] hover:text-red-400 transition-all shrink-0"
+                      >
+                        <Trash2 size={14} />
+                      </button>
+                    )}
+                  </li>
+                ))}
+              </ul>
+            </div>
+          ))}
+        </div>
+      )}
+
+      {/* Add manual item */}
       <div className="flex justify-center">
-        <button className="flex items-center gap-2 bg-[#F5EDE0] text-[#7B5EA7] font-semibold text-sm px-6 py-3 rounded-full hover:bg-[#EEE0FF] transition-colors">
-          <Plus size={16} />
-          Add to my own list
-        </button>
+        {!addingItem ? (
+          <button
+            onClick={() => setAddingItem(true)}
+            className="flex items-center gap-2 bg-[#F5EDE0] text-[#7B5EA7] font-semibold text-sm px-6 py-3 rounded-full hover:bg-[#EEE0FF] transition-colors"
+          >
+            <Plus size={16} /> Add to my own list
+          </button>
+        ) : (
+          <div className="bg-white rounded-2xl p-5 shadow-[0_4px_20px_0_#7B5EA714] w-full max-w-md space-y-3">
+            <h3 className="font-display font-bold text-sm text-[#2D1F3D]">Add item</h3>
+            <input
+              autoFocus
+              className="w-full bg-[#FDF8F2] border border-[#E8D9C8] rounded-xl px-3 py-2.5 text-sm text-[#2D1F3D] placeholder:text-[#7A6775] outline-none focus:border-[#7B5EA7] transition-colors"
+              placeholder="Item name"
+              value={newName}
+              onChange={e => setNewName(e.target.value)}
+              onKeyDown={e => e.key === 'Enter' && handleAddManual()}
+            />
+            <div className="flex gap-2">
+              <input
+                type="number"
+                min="0"
+                className="w-24 bg-[#FDF8F2] border border-[#E8D9C8] rounded-xl px-3 py-2.5 text-sm text-[#2D1F3D] placeholder:text-[#7A6775] outline-none focus:border-[#7B5EA7] transition-colors"
+                placeholder="Qty"
+                value={newQty}
+                onChange={e => setNewQty(e.target.value)}
+              />
+              <input
+                className="flex-1 bg-[#FDF8F2] border border-[#E8D9C8] rounded-xl px-3 py-2.5 text-sm text-[#2D1F3D] placeholder:text-[#7A6775] outline-none focus:border-[#7B5EA7] transition-colors"
+                placeholder="Unit (g, ml, pieces…)"
+                value={newUnit}
+                onChange={e => setNewUnit(e.target.value)}
+              />
+            </div>
+            <div className="flex gap-2">
+              <button
+                onClick={() => setAddingItem(false)}
+                className="flex-1 border border-[#E8D9C8] text-[#7A6775] text-sm font-semibold py-2 rounded-full hover:bg-[#FDF8F2] transition-colors"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleAddManual}
+                disabled={!newName.trim()}
+                className="flex-1 bg-[#7B5EA7] text-white text-sm font-semibold py-2 rounded-full hover:bg-[#6a4e94] transition-colors disabled:opacity-50"
+              >
+                Add
+              </button>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   )

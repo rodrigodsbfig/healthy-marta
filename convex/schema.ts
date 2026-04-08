@@ -36,7 +36,7 @@ export default defineSchema({
   }).index('by_user', ['userId']),
 
   mealPlans: defineTable({
-    userId: v.id('users'),
+    userId: v.optional(v.id('users')),
     weekStart: v.string(), // ISO date string (Monday)
     slots: v.array(
       v.object({
@@ -67,7 +67,7 @@ export default defineSchema({
   }).index('by_user', ['userId']),
 
   shoppingLists: defineTable({
-    userId: v.id('users'),
+    userId: v.optional(v.id('users')),
     mealPlanId: v.optional(v.id('mealPlans')),
     weekStart: v.optional(v.string()),
     items: v.array(
