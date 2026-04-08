@@ -9,7 +9,7 @@ export default defineSchema({
   }).index('by_token', ['tokenIdentifier']),
 
   recipes: defineTable({
-    userId: v.id('users'),
+    userId: v.optional(v.id('users')),
     title: v.string(),
     description: v.optional(v.string()),
     servings: v.number(),
