@@ -4,16 +4,12 @@ import { useQuery, useMutation } from 'convex/react'
 import { ArrowLeft, Clock, Users, Pencil, Trash2, ChefHat } from 'lucide-react'
 import { api } from '../../convex/_generated/api'
 import type { Id } from '../../convex/_generated/dataModel'
+import { useLanguage } from '@/lib/language'
+import { translateTag } from '@/lib/translations'
 import { RecipeForm } from '@/components/RecipeForm'
 
-const nutritionConfig = [
-  { key: 'calories' as const, label: 'Calories', unit: 'kcal', bg: 'bg-[#EEE0FF]',  text: 'text-[#7B5EA7]' },
-  { key: 'protein'  as const, label: 'Protein',  unit: 'g',    bg: 'bg-[#E8F5EE]',  text: 'text-[#2D9B5C]' },
-  { key: 'carbs'   as const, label: 'Carbs',    unit: 'g',    bg: 'bg-[#FFF3E8]',  text: 'text-[#E89B6C]' },
-  { key: 'fat'     as const, label: 'Fat',       unit: 'g',    bg: 'bg-[#F5EDE0]',  text: 'text-[#7A6775]' },
-]
-
 export function RecipeDetail() {
+  const { t, lang } = useLanguage()
   const { id } = useParams<{ id: string }>()
   const navigate = useNavigate()
   const recipe = useQuery(api.functions.recipes.get, { id: id as Id<'recipes'> })
@@ -21,32 +17,39 @@ export function RecipeDetail() {
   const [editOpen, setEditOpen] = useState(false)
   const [confirmDelete, setConfirmDelete] = useState(false)
 
+  const nutritionConfig = [
+    { key: 'calories' as const, label: t('cal_label'),     unit: 'kcal', bg: 'bg-[#EEE0FF]', text: 'text-[#7B5EA7]' },
+    { key: 'protein'  as const, label: t('protein_label'), unit: 'g',    bg: 'bg-[#E8F5EE]', text: 'text-[#2D9B5C]' },
+    { key: 'carbs'    as const, label: t('carbs_label'),   unit: 'g',    bg: 'bg-[#FFF3E8]', text: 'text-[#E89B6C]' },
+    { key: 'fat'      as const, label: t('fat_label'),     unit: 'g',    bg: 'bg-[#F5EDE0]', text: 'text-[#7A6775]' },
+  ]
+
   async function handleDelete() {
     if (!recipe) return
     await remove({ id: recipe._id })
     navigate('/recipes')
   }
 
-  // Loading
   if (recipe === undefined) {
     return (
       <div className="max-w-5xl mx-auto pt-20 text-center text-[#7A6775] text-sm">
-        Loading recipe…
+        {t('loading_recipe')}
       </div>
     )
   }
 
-  // Not found
   if (recipe === null) {
     return (
       <div className="max-w-5xl mx-auto pt-20 text-center">
-        <p className="text-[#7A6775] text-sm mb-4">Recipe not found.</p>
+        <p className="text-[#7A6775] text-sm mb-4">{t('recipe_not_found')}</p>
         <button onClick={() => navigate('/recipes')} className="text-[#7B5EA7] font-semibold text-sm">
-          ← Back to Recipes
+          {t('back_link')}
         </button>
       </div>
     )
   }
+
+  const servings = recipe.servings
 
   return (
     <>
@@ -58,7 +61,7 @@ export function RecipeDetail() {
             className="flex items-center gap-1.5 text-[#7B5EA7] text-[13px] hover:opacity-70 transition-opacity"
           >
             <ArrowLeft size={15} />
-            Back to Recipes
+            {t('back_to_recipes')}
           </button>
 
           <div className="flex gap-2">
@@ -66,13 +69,13 @@ export function RecipeDetail() {
               onClick={() => setEditOpen(true)}
               className="flex items-center gap-1.5 border border-[#E8D9C8] text-[#7A6775] text-sm font-semibold px-4 py-2 rounded-full hover:bg-[#FDF8F2] transition-colors"
             >
-              <Pencil size={14} /> Edit
+              <Pencil size={14} /> {t('edit')}
             </button>
             <button
               onClick={() => setConfirmDelete(true)}
               className="flex items-center gap-1.5 border border-red-200 text-red-400 text-sm font-semibold px-4 py-2 rounded-full hover:bg-red-50 transition-colors"
             >
-              <Trash2 size={14} /> Delete
+              <Trash2 size={14} /> {t('delete')}
             </button>
           </div>
         </div>
@@ -100,10 +103,10 @@ export function RecipeDetail() {
 
             <div className="flex gap-4 text-[12px] text-[#7A6775]">
               <span className="flex items-center gap-1">
-                <Clock size={13} /> {recipe.prepTime + recipe.cookTime} min
+                <Clock size={13} /> {recipe.prepTime + recipe.cookTime} {t('min')}
               </span>
               <span className="flex items-center gap-1">
-                <Users size={13} /> {recipe.servings} servings
+                <Users size={13} /> {servings} {lang === 'pt' ? (servings === 1 ? 'porção' : 'porções') : (servings === 1 ? 'serving' : 'servings')}
               </span>
             </div>
 
@@ -111,7 +114,7 @@ export function RecipeDetail() {
               <div className="flex flex-wrap gap-1.5">
                 {recipe.tags.map(tag => (
                   <span key={tag} className="text-[11px] font-medium bg-[#F5EDE0] text-[#7A6775] px-2.5 py-1 rounded-full">
-                    {tag}
+                    {translateTag(tag, lang)}
                   </span>
                 ))}
               </div>
@@ -126,14 +129,13 @@ export function RecipeDetail() {
                 <p className="text-sm text-[#7A6775] mt-2">{recipe.description}</p>
               )}
               <p className="text-sm text-[#7A6775] mt-1">
-                Prep {recipe.prepTime} min · Cook {recipe.cookTime} min · {recipe.servings} servings
+                {t('prep')} {recipe.prepTime} {t('min')} · {t('cook')} {recipe.cookTime} {t('min')} · {servings} {lang === 'pt' ? (servings === 1 ? 'porção' : 'porções') : (servings === 1 ? 'serving' : 'servings')}
               </p>
             </div>
 
-            {/* Ingredients */}
             {recipe.ingredients.length > 0 && (
               <div>
-                <h2 className="font-display font-bold text-base text-[#2D1F3D] mb-3">Ingredients</h2>
+                <h2 className="font-display font-bold text-base text-[#2D1F3D] mb-3">{t('ingredients')}</h2>
                 <ul className="space-y-2">
                   {recipe.ingredients.map((ing, i) => (
                     <li key={i} className="flex justify-between text-sm">
@@ -149,10 +151,9 @@ export function RecipeDetail() {
               <div className="border-t border-[#E8D9C8]" />
             )}
 
-            {/* Steps */}
             {recipe.steps.length > 0 && (
               <div>
-                <h2 className="font-display font-bold text-base text-[#2D1F3D] mb-3">Instructions</h2>
+                <h2 className="font-display font-bold text-base text-[#2D1F3D] mb-3">{t('instructions')}</h2>
                 <ol className="space-y-3">
                   {recipe.steps.map((step, i) => (
                     <li key={i} className="flex gap-3 text-sm text-[#7A6775]">
@@ -167,29 +168,27 @@ export function RecipeDetail() {
         </div>
       </div>
 
-      {/* Edit form */}
       <RecipeForm open={editOpen} onClose={() => setEditOpen(false)} existing={recipe} />
 
-      {/* Delete confirmation */}
       {confirmDelete && (
         <div className="fixed inset-0 bg-[#2D1F3D]/30 z-50 flex items-center justify-center p-4">
           <div className="bg-white rounded-2xl p-6 max-w-sm w-full shadow-2xl space-y-4">
-            <h3 className="font-display font-bold text-lg text-[#2D1F3D]">Delete recipe?</h3>
+            <h3 className="font-display font-bold text-lg text-[#2D1F3D]">{t('del_recipe_title')}</h3>
             <p className="text-sm text-[#7A6775]">
-              "{recipe.title}" will be permanently removed. This can't be undone.
+              "{recipe.title}" {t('del_recipe_body_suffix')}
             </p>
             <div className="flex gap-3">
               <button
                 onClick={() => setConfirmDelete(false)}
                 className="flex-1 border border-[#E8D9C8] text-[#7A6775] font-semibold py-2.5 rounded-full hover:bg-[#FDF8F2] transition-colors text-sm"
               >
-                Cancel
+                {t('cancel')}
               </button>
               <button
                 onClick={handleDelete}
                 className="flex-1 bg-red-500 text-white font-semibold py-2.5 rounded-full hover:bg-red-600 transition-colors text-sm"
               >
-                Delete
+                {t('delete')}
               </button>
             </div>
           </div>

@@ -3,6 +3,8 @@ import { useQuery } from 'convex/react'
 import { useNavigate } from 'react-router-dom'
 import { Plus, Search, Clock, ChefHat } from 'lucide-react'
 import { api } from '../../convex/_generated/api'
+import { useLanguage } from '@/lib/language'
+import { translateTag } from '@/lib/translations'
 import { RecipeForm } from '@/components/RecipeForm'
 import { RecipeImport } from '@/components/RecipeImport'
 
@@ -19,6 +21,7 @@ type RecipePrefill = {
 }
 
 export function Recipes() {
+  const { t, lang } = useLanguage()
   const recipes = useQuery(api.functions.recipes.list)
   const navigate = useNavigate()
   const [search, setSearch] = useState('')
@@ -48,9 +51,13 @@ export function Recipes() {
         {/* Header */}
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="font-display font-bold text-2xl text-[#2D1F3D]">Recipes</h1>
+            <h1 className="font-display font-bold text-2xl text-[#2D1F3D]">{t('recipes')}</h1>
             <p className="text-sm text-[#7A6775] mt-0.5">
-              {recipes === undefined ? 'Loading…' : `${recipes.length} recipe${recipes.length !== 1 ? 's' : ''} saved`}
+              {recipes === undefined
+                ? t('loading')
+                : lang === 'pt'
+                  ? `${recipes.length} receita${recipes.length !== 1 ? 's' : ''} guardada${recipes.length !== 1 ? 's' : ''}`
+                  : `${recipes.length} recipe${recipes.length !== 1 ? 's' : ''} saved`}
             </p>
           </div>
           <button
@@ -58,7 +65,7 @@ export function Recipes() {
             className="bg-[#7B5EA7] text-white text-sm font-semibold px-5 py-2.5 rounded-full hover:bg-[#6a4e94] transition-colors flex items-center gap-2"
           >
             <Plus size={16} />
-            Add recipe
+            {t('add_recipe')}
           </button>
         </div>
 
@@ -67,7 +74,7 @@ export function Recipes() {
           <Search size={16} className="absolute left-4 top-1/2 -translate-y-1/2 text-[#7A6775]" />
           <input
             type="text"
-            placeholder="Search recipes or tags…"
+            placeholder={t('search_recipes')}
             value={search}
             onChange={e => setSearch(e.target.value)}
             className="w-full bg-white border border-[#E8D9C8] rounded-full pl-10 pr-4 py-2.5 text-sm text-[#2D1F3D] placeholder:text-[#7A6775] outline-none focus:border-[#7B5EA7] transition-colors shadow-[0_4px_20px_0_#7B5EA714]"
@@ -81,17 +88,17 @@ export function Recipes() {
               <ChefHat size={28} className="text-[#7B5EA7]" />
             </div>
             <h3 className="font-display font-bold text-base text-[#2D1F3D] mb-1">
-              {search ? 'No recipes found' : 'No recipes yet'}
+              {search ? t('no_recipes_found') : t('no_recipes_yet')}
             </h3>
             <p className="text-sm text-[#7A6775] mb-5">
-              {search ? 'Try a different search term.' : 'Add your first recipe to get started.'}
+              {search ? t('try_diff_search') : t('add_first_recipe')}
             </p>
             {!search && (
               <button
                 onClick={() => setImportOpen(true)}
                 className="bg-[#7B5EA7] text-white text-sm font-semibold px-5 py-2.5 rounded-full hover:bg-[#6a4e94] transition-colors"
               >
-                Add recipe
+                {t('add_recipe')}
               </button>
             )}
           </div>
@@ -115,7 +122,7 @@ export function Recipes() {
                     <div className="flex gap-1.5 flex-wrap">
                       {r.tags.slice(0, 3).map(tag => (
                         <span key={tag} className="text-[10px] font-medium bg-[#F5EDE0] text-[#7A6775] px-2 py-0.5 rounded-full">
-                          {tag}
+                          {translateTag(tag, lang)}
                         </span>
                       ))}
                     </div>
@@ -123,10 +130,10 @@ export function Recipes() {
                   <div className="flex justify-between text-[12px] text-[#7A6775] pt-1 border-t border-[#E8D9C8]">
                     <span className="flex items-center gap-1">
                       <Clock size={11} />
-                      {r.prepTime + r.cookTime} min
+                      {r.prepTime + r.cookTime} {t('min')}
                     </span>
                     <span>
-                      {r.nutrition ? `${r.nutrition.calories} kcal` : `${r.servings} servings`}
+                      {r.nutrition ? `${r.nutrition.calories} kcal` : `${r.servings} ${lang === 'pt' ? 'porções' : 'servings'}`}
                     </span>
                   </div>
                 </div>

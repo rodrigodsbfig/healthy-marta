@@ -3,6 +3,7 @@ import { useQuery, useMutation } from 'convex/react'
 import { Plus, RefreshCw, Trash2, ShoppingCart } from 'lucide-react'
 import { api } from '../../convex/_generated/api'
 import { cn } from '@/lib/utils'
+import { useLanguage } from '@/lib/language'
 import { getWeekStart, formatShort, weekDays } from '@/lib/dates'
 
 function CheckIcon({ checked }: { checked: boolean }) {
@@ -21,6 +22,7 @@ function CheckIcon({ checked }: { checked: boolean }) {
 }
 
 export function ShoppingList() {
+  const { t } = useLanguage()
   const weekStart = getWeekStart()
   const days = weekDays(weekStart)
   const weekLabel = `${formatShort(days[0])} – ${formatShort(days[6])}`
@@ -40,7 +42,6 @@ export function ShoppingList() {
   const items = list?.items ?? []
   const checked = items.filter(i => i.checked).length
 
-  // Group items by category
   const categories = Array.from(
     items.reduce((map, item, idx) => {
       const cat = item.category ?? 'Other'
@@ -78,13 +79,13 @@ export function ShoppingList() {
       {/* Header */}
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="font-display font-bold text-2xl text-[#2D1F3D]">Shopping List</h1>
-          <p className="text-sm text-[#7A6775] mt-0.5">{weekLabel} · from meal plan</p>
+          <h1 className="font-display font-bold text-2xl text-[#2D1F3D]">{t('shopping_list')}</h1>
+          <p className="text-sm text-[#7A6775] mt-0.5">{weekLabel} · {t('from_meal_plan')}</p>
         </div>
         <div className="flex items-center gap-3">
           {items.length > 0 && (
             <span className="text-sm text-[#7A6775]">
-              <span className="font-semibold text-[#7B5EA7]">{checked}</span> of {items.length} items
+              <span className="font-semibold text-[#7B5EA7]">{checked}</span> {t('of_items')} {items.length} {t('items')}
             </span>
           )}
           <button
@@ -93,7 +94,7 @@ export function ShoppingList() {
             className="flex items-center gap-2 border border-[#E8D9C8] text-[#7A6775] text-sm font-semibold px-4 py-2 rounded-full hover:bg-[#F5EDE0] transition-colors disabled:opacity-50"
           >
             <RefreshCw size={14} className={generating ? 'animate-spin' : ''} />
-            {generating ? 'Generating…' : 'Generate from plan'}
+            {generating ? t('generating') : t('gen_from_plan')}
           </button>
         </div>
       </div>
@@ -114,16 +115,14 @@ export function ShoppingList() {
           <div className="w-16 h-16 bg-[#EEE0FF] rounded-2xl flex items-center justify-center mx-auto mb-4">
             <ShoppingCart size={28} className="text-[#7B5EA7]" />
           </div>
-          <h3 className="font-display font-bold text-base text-[#2D1F3D] mb-1">No items yet</h3>
-          <p className="text-sm text-[#7A6775] mb-5">
-            Plan your meals first, then generate your shopping list.
-          </p>
+          <h3 className="font-display font-bold text-base text-[#2D1F3D] mb-1">{t('no_items_yet')}</h3>
+          <p className="text-sm text-[#7A6775] mb-5">{t('shopping_hint')}</p>
           <button
             onClick={handleGenerate}
             disabled={generating}
             className="bg-[#7B5EA7] text-white text-sm font-semibold px-5 py-2.5 rounded-full hover:bg-[#6a4e94] transition-colors disabled:opacity-50"
           >
-            {generating ? 'Generating…' : 'Generate from meal plan'}
+            {generating ? t('generating') : t('gen_from_ml')}
           </button>
         </div>
       )}
@@ -180,15 +179,15 @@ export function ShoppingList() {
             onClick={() => setAddingItem(true)}
             className="flex items-center gap-2 bg-[#F5EDE0] text-[#7B5EA7] font-semibold text-sm px-6 py-3 rounded-full hover:bg-[#EEE0FF] transition-colors"
           >
-            <Plus size={16} /> Add to my own list
+            <Plus size={16} /> {t('add_to_my_list')}
           </button>
         ) : (
           <div className="bg-white rounded-2xl p-5 shadow-[0_4px_20px_0_#7B5EA714] w-full max-w-md space-y-3">
-            <h3 className="font-display font-bold text-sm text-[#2D1F3D]">Add item</h3>
+            <h3 className="font-display font-bold text-sm text-[#2D1F3D]">{t('add_item')}</h3>
             <input
               autoFocus
               className="w-full bg-[#FDF8F2] border border-[#E8D9C8] rounded-xl px-3 py-2.5 text-sm text-[#2D1F3D] placeholder:text-[#7A6775] outline-none focus:border-[#7B5EA7] transition-colors"
-              placeholder="Item name"
+              placeholder={t('item_name')}
               value={newName}
               onChange={e => setNewName(e.target.value)}
               onKeyDown={e => e.key === 'Enter' && handleAddManual()}
@@ -198,13 +197,13 @@ export function ShoppingList() {
                 type="number"
                 min="0"
                 className="w-24 bg-[#FDF8F2] border border-[#E8D9C8] rounded-xl px-3 py-2.5 text-sm text-[#2D1F3D] placeholder:text-[#7A6775] outline-none focus:border-[#7B5EA7] transition-colors"
-                placeholder="Qty"
+                placeholder={t('qty')}
                 value={newQty}
                 onChange={e => setNewQty(e.target.value)}
               />
               <input
                 className="flex-1 bg-[#FDF8F2] border border-[#E8D9C8] rounded-xl px-3 py-2.5 text-sm text-[#2D1F3D] placeholder:text-[#7A6775] outline-none focus:border-[#7B5EA7] transition-colors"
-                placeholder="Unit (g, ml, pieces…)"
+                placeholder={t('unit_hint')}
                 value={newUnit}
                 onChange={e => setNewUnit(e.target.value)}
               />
@@ -214,14 +213,14 @@ export function ShoppingList() {
                 onClick={() => setAddingItem(false)}
                 className="flex-1 border border-[#E8D9C8] text-[#7A6775] text-sm font-semibold py-2 rounded-full hover:bg-[#FDF8F2] transition-colors"
               >
-                Cancel
+                {t('cancel')}
               </button>
               <button
                 onClick={handleAddManual}
                 disabled={!newName.trim()}
                 className="flex-1 bg-[#7B5EA7] text-white text-sm font-semibold py-2 rounded-full hover:bg-[#6a4e94] transition-colors disabled:opacity-50"
               >
-                Add
+                {t('add')}
               </button>
             </div>
           </div>

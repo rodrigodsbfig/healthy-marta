@@ -1,5 +1,6 @@
 import { NavLink } from 'react-router-dom'
 import { cn } from '@/lib/utils'
+import { useLanguage } from '@/lib/language'
 import {
   LayoutDashboard,
   CalendarDays,
@@ -8,15 +9,17 @@ import {
   User,
 } from 'lucide-react'
 
-const navItems = [
-  { to: '/',              label: 'Home',          icon: LayoutDashboard },
-  { to: '/meal-plan',     label: 'Meal Plan',     icon: CalendarDays },
-  { to: '/recipes',       label: 'Recipes',       icon: BookOpen },
-  { to: '/shopping-list', label: 'Shopping List', icon: ShoppingCart },
-  { to: '/profile',       label: 'Profile',       icon: User },
-]
-
 export function Sidebar() {
+  const { t } = useLanguage()
+
+  const navItems = [
+    { to: '/',              label: t('nav_today'),    icon: LayoutDashboard },
+    { to: '/meal-plan',     label: t('nav_meal_plan'), icon: CalendarDays },
+    { to: '/recipes',       label: t('nav_recipes'),  icon: BookOpen },
+    { to: '/shopping-list', label: t('nav_shopping'), icon: ShoppingCart },
+    { to: '/profile',       label: t('nav_profile'),  icon: User },
+  ]
+
   return (
     <aside className="w-60 shrink-0 bg-white h-screen flex flex-col border-r border-[#E8D9C8] sticky top-0">
       {/* Logo */}

@@ -3,6 +3,7 @@ import { useAction } from 'convex/react'
 import { X, Camera, Link, MessageSquare, Upload, Loader2, AlertCircle } from 'lucide-react'
 import { api } from '../../convex/_generated/api'
 import { cn } from '@/lib/utils'
+import { useLanguage } from '@/lib/language'
 
 type Tab = 'photo' | 'url' | 'describe'
 
@@ -24,13 +25,6 @@ interface RecipeImportProps {
   onImported: (data: RecipeData) => void
 }
 
-const TABS: { id: Tab; label: string; icon: React.ReactNode }[] = [
-  { id: 'photo',    label: 'Photo',    icon: <Camera size={16} /> },
-  { id: 'url',      label: 'URL',      icon: <Link size={16} /> },
-  { id: 'describe', label: 'Describe', icon: <MessageSquare size={16} /> },
-]
-
-/** Resize an image file to max 1024px and return base64 + mimeType */
 async function resizeImage(file: File): Promise<{ base64: string; mimeType: string }> {
   return new Promise((resolve, reject) => {
     const img = new Image()
@@ -56,6 +50,7 @@ async function resizeImage(file: File): Promise<{ base64: string; mimeType: stri
 }
 
 export function RecipeImport({ open, onClose, onImported }: RecipeImportProps) {
+  const { t, lang } = useLanguage()
   const [tab, setTab] = useState<Tab>('photo')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -67,6 +62,12 @@ export function RecipeImport({ open, onClose, onImported }: RecipeImportProps) {
   const importFromPhoto    = useAction(api.functions.importRecipe.fromPhoto)
   const importFromUrl      = useAction(api.functions.importRecipe.fromUrl)
   const importFromDescribe = useAction(api.functions.importRecipe.fromDescription)
+
+  const TABS: { id: Tab; label: string; icon: React.ReactNode }[] = [
+    { id: 'photo',    label: t('tab_photo'),    icon: <Camera size={16} /> },
+    { id: 'url',      label: t('tab_url'),      icon: <Link size={16} /> },
+    { id: 'describe', label: t('tab_describe'), icon: <MessageSquare size={16} /> },
+  ]
 
   function reset() {
     setLoading(false); setError(null); setPreview(null)
@@ -83,11 +84,11 @@ export function RecipeImport({ open, onClose, onImported }: RecipeImportProps) {
     setLoading(true)
     try {
       const { base64, mimeType } = await resizeImage(file)
-      const data = await importFromPhoto({ base64, mimeType })
+      const data = await importFromPhoto({ base64, mimeType, language: lang })
       reset()
       onImported(data)
     } catch (err) {
-      setError((err as Error).message ?? 'Could not read the recipe from this photo. Try a clearer image.')
+      setError((err as Error).message ?? t('reading_recipe'))
     } finally {
       setLoading(false)
       if (fileRef.current) fileRef.current.value = ''
@@ -98,11 +99,11 @@ export function RecipeImport({ open, onClose, onImported }: RecipeImportProps) {
     if (!url.trim()) return
     setError(null); setLoading(true)
     try {
-      const data = await importFromUrl({ url: url.trim() })
+      const data = await importFromUrl({ url: url.trim(), language: lang })
       reset()
       onImported(data)
     } catch (err) {
-      setError((err as Error).message ?? 'Could not load that page. Try a different URL.')
+      setError((err as Error).message ?? t('importing'))
     } finally {
       setLoading(false)
     }
@@ -112,7 +113,7 @@ export function RecipeImport({ open, onClose, onImported }: RecipeImportProps) {
     if (!description.trim()) return
     setError(null); setLoading(true)
     try {
-      const data = await importFromDescribe({ description: description.trim() })
+      const data = await importFromDescribe({ description: description.trim(), language: lang })
       reset()
       onImported(data)
     } finally {
@@ -128,8 +129,8 @@ export function RecipeImport({ open, onClose, onImported }: RecipeImportProps) {
         {/* Header */}
         <div className="flex items-center justify-between px-6 py-5 border-b border-[#E8D9C8]">
           <div>
-            <h2 className="font-display font-bold text-lg text-[#2D1F3D]">Add recipe</h2>
-            <p className="text-[12px] text-[#7A6775]">AI will fill in the details for you</p>
+            <h2 className="font-display font-bold text-lg text-[#2D1F3D]">{t('import_title')}</h2>
+            <p className="text-[12px] text-[#7A6775]">{t('import_subtitle')}</p>
           </div>
           <button onClick={handleClose} className="text-[#7A6775] hover:text-[#2D1F3D] transition-colors">
             <X size={20} />
@@ -157,24 +158,19 @@ export function RecipeImport({ open, onClose, onImported }: RecipeImportProps) {
         {/* Content */}
         <div className="px-6 py-5 space-y-4">
 
-          {/* ── Photo tab ── */}
+          {/* Photo tab */}
           {tab === 'photo' && (
             <div className="space-y-4">
-              <p className="text-sm text-[#7A6775]">
-                Take a photo of a cookbook page, a recipe card, or anything with recipe text on it.
-              </p>
-
-              {/* Image preview */}
+              <p className="text-sm text-[#7A6775]">{t('photo_hint')}</p>
               {preview && (
                 <div className="w-full h-48 rounded-xl overflow-hidden border border-[#E8D9C8]">
                   <img src={preview} alt="Recipe" className="w-full h-full object-cover" />
                 </div>
               )}
-
               {loading ? (
                 <div className="flex flex-col items-center gap-3 py-6 text-[#7A6775]">
                   <Loader2 size={28} className="animate-spin text-[#7B5EA7]" />
-                  <p className="text-sm">Reading the recipe…</p>
+                  <p className="text-sm">{t('reading_recipe')}</p>
                 </div>
               ) : (
                 <div className="flex gap-3">
@@ -188,7 +184,7 @@ export function RecipeImport({ open, onClose, onImported }: RecipeImportProps) {
                     }}
                     className="flex-1 flex items-center justify-center gap-2 border-2 border-dashed border-[#E8D9C8] text-[#7A6775] text-sm font-semibold py-4 rounded-xl hover:border-[#7B5EA7] hover:text-[#7B5EA7] transition-colors"
                   >
-                    <Camera size={18} /> Take photo
+                    <Camera size={18} /> {t('take_photo')}
                   </button>
                   <button
                     onClick={() => {
@@ -200,21 +196,18 @@ export function RecipeImport({ open, onClose, onImported }: RecipeImportProps) {
                     }}
                     className="flex-1 flex items-center justify-center gap-2 border-2 border-dashed border-[#E8D9C8] text-[#7A6775] text-sm font-semibold py-4 rounded-xl hover:border-[#7B5EA7] hover:text-[#7B5EA7] transition-colors"
                   >
-                    <Upload size={18} /> Upload image
+                    <Upload size={18} /> {t('upload_image')}
                   </button>
                 </div>
               )}
-
               <input ref={fileRef} type="file" className="hidden" onChange={handleFileChange} />
             </div>
           )}
 
-          {/* ── URL tab ── */}
+          {/* URL tab */}
           {tab === 'url' && (
             <div className="space-y-4">
-              <p className="text-sm text-[#7A6775]">
-                Paste a link from any recipe website — BBC Good Food, AllRecipes, NYT Cooking, and most others work.
-              </p>
+              <p className="text-sm text-[#7A6775]">{t('url_hint')}</p>
               <input
                 type="url"
                 placeholder="https://www.bbcgoodfood.com/recipes/…"
@@ -228,19 +221,17 @@ export function RecipeImport({ open, onClose, onImported }: RecipeImportProps) {
                 disabled={!url.trim() || loading}
                 className="w-full bg-[#7B5EA7] text-white font-semibold py-3 rounded-full hover:bg-[#6a4e94] transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
               >
-                {loading ? <><Loader2 size={16} className="animate-spin" /> Importing…</> : 'Import recipe'}
+                {loading ? <><Loader2 size={16} className="animate-spin" /> {t('importing')}</> : t('import_recipe')}
               </button>
             </div>
           )}
 
-          {/* ── Describe tab ── */}
+          {/* Describe tab */}
           {tab === 'describe' && (
             <div className="space-y-4">
-              <p className="text-sm text-[#7A6775]">
-                Describe a meal you love and AI will generate a full recipe for it.
-              </p>
+              <p className="text-sm text-[#7A6775]">{t('describe_hint')}</p>
               <textarea
-                placeholder="e.g. My mum's chicken soup with carrots, celery and noodles. Serves 4, takes about an hour."
+                placeholder={t('describe_ph')}
                 value={description}
                 onChange={e => setDescription(e.target.value)}
                 className="w-full bg-[#FDF8F2] border border-[#E8D9C8] rounded-xl px-4 py-3 text-sm text-[#2D1F3D] placeholder:text-[#7A6775] outline-none focus:border-[#7B5EA7] transition-colors resize-none h-28"
@@ -250,7 +241,7 @@ export function RecipeImport({ open, onClose, onImported }: RecipeImportProps) {
                 disabled={!description.trim() || loading}
                 className="w-full bg-[#7B5EA7] text-white font-semibold py-3 rounded-full hover:bg-[#6a4e94] transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
               >
-                {loading ? <><Loader2 size={16} className="animate-spin" /> Generating…</> : 'Generate recipe'}
+                {loading ? <><Loader2 size={16} className="animate-spin" /> {t('generating')}</> : t('generate_recipe')}
               </button>
             </div>
           )}
@@ -266,9 +257,7 @@ export function RecipeImport({ open, onClose, onImported }: RecipeImportProps) {
 
         {/* Footer note */}
         <div className="px-6 pb-5">
-          <p className="text-[11px] text-[#7A6775] text-center">
-            AI results are editable — you'll review before saving
-          </p>
+          <p className="text-[11px] text-[#7A6775] text-center">{t('ai_disclaimer')}</p>
         </div>
       </div>
     </div>

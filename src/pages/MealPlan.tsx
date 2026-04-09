@@ -4,13 +4,13 @@ import { ChevronLeft, ChevronRight, Plus, X } from 'lucide-react'
 import { api } from '../../convex/_generated/api'
 import type { Id } from '../../convex/_generated/dataModel'
 import { cn } from '@/lib/utils'
+import { useLanguage } from '@/lib/language'
+import { DAY_NAMES, DAY_SHORT, MEAL_LABELS } from '@/lib/translations'
 import { getWeekStart, addWeeks, formatShort, weekDays } from '@/lib/dates'
 import { RecipePicker } from '@/components/RecipePicker'
 
 type MealType = 'breakfast' | 'lunch' | 'dinner' | 'snack'
 
-const DAY_NAMES = ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday']
-const DAY_SHORT = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun']
 const MEAL_ORDER: MealType[] = ['breakfast', 'lunch', 'dinner', 'snack']
 const MEAL_COLORS: Record<MealType, { dot: string; bg: string }> = {
   breakfast: { dot: 'bg-[#7B5EA7]', bg: 'bg-[#EEE0FF]' },
@@ -20,6 +20,7 @@ const MEAL_COLORS: Record<MealType, { dot: string; bg: string }> = {
 }
 
 export function MealPlan() {
+  const { t, lang } = useLanguage()
   const [weekStart, setWeekStart] = useState(getWeekStart())
   const [selectedDay, setSelectedDay] = useState(0)
   const [pickerOpen, setPickerOpen] = useState(false)
@@ -28,14 +29,12 @@ export function MealPlan() {
   const addSlot = useMutation(api.functions.mealPlans.addSlot)
   const removeSlot = useMutation(api.functions.mealPlans.removeSlot)
 
-  // Fetch all recipes so we can show names
   const allRecipes = useQuery(api.functions.recipes.list)
   const recipeMap = new Map(allRecipes?.map(r => [r._id, r]) ?? [])
 
   const days = weekDays(weekStart)
   const slotsForDay = (plan?.slots ?? []).filter(s => s.day === selectedDay)
 
-  // Count meals per day for the grid dots
   function mealsOnDay(dayIdx: number) {
     return (plan?.slots ?? []).filter(s => s.day === dayIdx).length
   }
@@ -57,7 +56,7 @@ export function MealPlan() {
         {/* Header */}
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="font-display font-bold text-2xl text-[#2D1F3D]">Meal Plan</h1>
+            <h1 className="font-display font-bold text-2xl text-[#2D1F3D]">{t('meal_plan')}</h1>
             <p className="text-sm text-[#7A6775] mt-0.5">{weekLabel}</p>
           </div>
           <div className="flex items-center gap-2">
@@ -71,7 +70,7 @@ export function MealPlan() {
               onClick={() => setWeekStart(getWeekStart())}
               className="text-[12px] font-semibold text-[#7B5EA7] px-3 py-1 rounded-full border border-[#E8D9C8] hover:bg-[#EEE0FF] transition-colors"
             >
-              Today
+              {t('today_label')}
             </button>
             <button
               onClick={() => setWeekStart(w => addWeeks(w, 1))}
@@ -87,8 +86,7 @@ export function MealPlan() {
           {days.map((dateStr, i) => {
             const isSelected = i === selectedDay
             const isWeekend = i >= 5
-            const isToday = dateStr === getWeekStart(new Date()).split('T')[0] &&
-              dateStr === new Date().toISOString().split('T')[0]
+            const isToday = dateStr === new Date().toISOString().split('T')[0]
             const count = mealsOnDay(i)
             return (
               <button
@@ -104,7 +102,7 @@ export function MealPlan() {
                 )}
               >
                 <span className={cn('text-[11px] font-medium', isSelected ? 'text-white/70' : 'text-[#7A6775]')}>
-                  {DAY_SHORT[i]}
+                  {DAY_SHORT[lang][i]}
                 </span>
                 <span className="text-xl font-display font-bold">
                   {new Date(dateStr + 'T00:00:00').getDate()}
@@ -118,7 +116,7 @@ export function MealPlan() {
                   }
                 </div>
                 {isToday && !isSelected && (
-                  <span className="text-[9px] font-bold text-[#7B5EA7] uppercase tracking-wide">Today</span>
+                  <span className="text-[9px] font-bold text-[#7B5EA7] uppercase tracking-wide">{t('today_label')}</span>
                 )}
               </button>
             )
@@ -130,30 +128,30 @@ export function MealPlan() {
           <div className="flex items-start justify-between mb-5">
             <div>
               <h2 className="font-display font-bold text-lg text-[#2D1F3D]">
-                {DAY_NAMES[selectedDay]}, {formatShort(days[selectedDay])}
+                {DAY_NAMES[lang][selectedDay]}, {formatShort(days[selectedDay])}
               </h2>
               <p className="text-[12px] text-[#7A6775] mt-0.5">
                 {slotsForDay.length === 0
-                  ? 'No meals planned'
-                  : `${slotsForDay.length} meal${slotsForDay.length > 1 ? 's' : ''} planned`}
+                  ? t('no_meals_planned')
+                  : `${slotsForDay.length} ${slotsForDay.length === 1 ? (lang === 'pt' ? 'refeição planeada' : 'meal planned') : (lang === 'pt' ? 'refeições planeadas' : 'meals planned')}`}
               </p>
             </div>
             <button
               onClick={() => setPickerOpen(true)}
               className="flex items-center gap-1.5 bg-[#7B5EA7] text-white text-sm font-semibold px-4 py-2 rounded-full hover:bg-[#6a4e94] transition-colors"
             >
-              <Plus size={15} /> Add meal
+              <Plus size={15} /> {t('add_meal')}
             </button>
           </div>
 
           {slotsForDay.length === 0 ? (
             <div className="py-10 text-center">
-              <p className="text-[#7A6775] text-sm">Nothing planned yet for this day.</p>
+              <p className="text-[#7A6775] text-sm">{t('nothing_planned')}</p>
               <button
                 onClick={() => setPickerOpen(true)}
                 className="mt-3 bg-[#EEE0FF] text-[#7B5EA7] text-sm font-semibold px-5 py-2 rounded-full hover:bg-[#e0d0f7] transition-colors"
               >
-                Add a recipe
+                {t('add_a_recipe')}
               </button>
             </div>
           ) : (
@@ -162,6 +160,7 @@ export function MealPlan() {
                 const slot = slotsForDay.find(s => s.meal === mealType)!
                 const recipe = recipeMap.get(slot.recipeId)
                 const colors = MEAL_COLORS[mealType]
+                const servings = slot.servings
                 return (
                   <div key={mealType} className="flex items-center gap-4 p-4 rounded-xl bg-[#FDF8F2] group">
                     <div className={cn('w-2 self-stretch rounded-full shrink-0', colors.dot)} />
@@ -169,14 +168,16 @@ export function MealPlan() {
                       <div className={cn('w-2.5 h-2.5 rounded-full', colors.dot)} />
                     </div>
                     <div className="flex-1 min-w-0">
-                      <p className="text-[11px] text-[#7A6775] capitalize mb-0.5">{mealType}</p>
+                      <p className="text-[11px] text-[#7A6775] capitalize mb-0.5">
+                        {MEAL_LABELS[lang][mealType]}
+                      </p>
                       <p className="text-sm font-semibold text-[#2D1F3D] truncate">
-                        {recipe?.title ?? 'Loading…'}
+                        {recipe?.title ?? t('loading')}
                       </p>
                       {recipe && (
                         <p className="text-[11px] text-[#7A6775]">
-                          {slot.servings} serving{slot.servings !== 1 ? 's' : ''}
-                          {recipe.nutrition ? ` · ${Math.round(recipe.nutrition.calories * slot.servings / recipe.servings)} kcal` : ''}
+                          {servings} {lang === 'pt' ? (servings === 1 ? 'porção' : 'porções') : (servings === 1 ? 'serving' : 'servings')}
+                          {recipe.nutrition ? ` · ${Math.round(recipe.nutrition.calories * servings / recipe.servings)} kcal` : ''}
                         </p>
                       )}
                     </div>
@@ -196,7 +197,7 @@ export function MealPlan() {
 
       <RecipePicker
         open={pickerOpen}
-        dayLabel={`${DAY_NAMES[selectedDay]}`}
+        dayLabel={DAY_NAMES[lang][selectedDay]}
         onClose={() => setPickerOpen(false)}
         onPick={handlePick}
       />

@@ -2,7 +2,7 @@ import { action } from '../_generated/server'
 import { v } from 'convex/values'
 import Anthropic from '@anthropic-ai/sdk'
 
-const SYSTEM_PROMPT = `You are a recipe extraction assistant. Extract recipe information and return ONLY a valid JSON object with this exact structure — no markdown, no explanation, just raw JSON:
+const BASE_SYSTEM_PROMPT = `You are a recipe extraction assistant. Extract recipe information and return ONLY a valid JSON object with this exact structure — no markdown, no explanation, just raw JSON:
 
 {
   "title": "string",
@@ -22,8 +22,16 @@ Rules:
 - quantity must be a plain number (e.g. 100, not "100g"). Put the unit separately.
 - unit must be one of: g, kg, ml, L, tbsp, tsp, cup, pieces, whole, cloves, slices, to taste
 - tags from: Breakfast, Lunch, Dinner, Snack, Vegetarian, Vegan, High Protein, Low Carb, Gluten-Free, Dairy-Free
+- tags must always be in English (use the exact values from the list above)
 - nutrition is per serving. Estimate if not given — do not leave it out.
 - If you cannot extract a field, use a sensible default (e.g. servings: 2, prepTime: 10)`
+
+function buildSystemPrompt(language?: string) {
+  const langInstruction = language === 'pt'
+    ? '\n- All text fields (title, description, ingredient names, steps) must be in European Portuguese (Portugal). Do not use Brazilian Portuguese.'
+    : '\n- All text fields (title, description, ingredient names, steps) must be in English.'
+  return BASE_SYSTEM_PROMPT + langInstruction
+}
 
 function getClient() {
   const key = process.env.ANTHROPIC_API_KEY
@@ -32,7 +40,6 @@ function getClient() {
 }
 
 function parseRecipe(text: string) {
-  // Strip markdown code fences if present
   const cleaned = text.replace(/^```(?:json)?\n?/, '').replace(/\n?```$/, '').trim()
   const data = JSON.parse(cleaned)
   return {
@@ -61,18 +68,19 @@ function parseRecipe(text: string) {
   }
 }
 
-// ─── From photo (base64 image) ───────────────────────────────────────────────
+// ─── From photo ───────────────────────────────────────────────────────────────
 export const fromPhoto = action({
   args: {
-    base64: v.string(),   // base64-encoded image
-    mimeType: v.string(), // e.g. "image/jpeg"
+    base64:   v.string(),
+    mimeType: v.string(),
+    language: v.optional(v.string()),
   },
-  handler: async (_ctx, { base64, mimeType }) => {
+  handler: async (_ctx, { base64, mimeType, language }) => {
     const client = getClient()
     const response = await client.messages.create({
       model: 'claude-sonnet-4-6',
       max_tokens: 2048,
-      system: SYSTEM_PROMPT,
+      system: buildSystemPrompt(language),
       messages: [
         {
           role: 'user',
@@ -93,9 +101,11 @@ export const fromPhoto = action({
 
 // ─── From URL ────────────────────────────────────────────────────────────────
 export const fromUrl = action({
-  args: { url: v.string() },
-  handler: async (_ctx, { url }) => {
-    // Fetch the page
+  args: {
+    url:      v.string(),
+    language: v.optional(v.string()),
+  },
+  handler: async (_ctx, { url, language }) => {
     let html: string
     try {
       const res = await fetch(url, {
@@ -107,7 +117,6 @@ export const fromUrl = action({
       throw new Error(`Could not load that URL. Make sure it's a public recipe page. (${(e as Error).message})`)
     }
 
-    // Try to extract JSON-LD recipe schema first (most recipe sites have it)
     const jsonLdMatch = html.match(/<script[^>]+type="application\/ld\+json"[^>]*>([\s\S]*?)<\/script>/gi)
     let contextText = ''
     if (jsonLdMatch) {
@@ -120,7 +129,6 @@ export const fromUrl = action({
       }
     }
 
-    // Fallback: strip HTML tags and take first 6000 chars
     if (!contextText) {
       contextText = html
         .replace(/<style[\s\S]*?<\/style>/gi, '')
@@ -135,7 +143,7 @@ export const fromUrl = action({
     const response = await client.messages.create({
       model: 'claude-sonnet-4-6',
       max_tokens: 2048,
-      system: SYSTEM_PROMPT,
+      system: buildSystemPrompt(language),
       messages: [
         {
           role: 'user',
@@ -150,13 +158,16 @@ export const fromUrl = action({
 
 // ─── From description ─────────────────────────────────────────────────────────
 export const fromDescription = action({
-  args: { description: v.string() },
-  handler: async (_ctx, { description }) => {
+  args: {
+    description: v.string(),
+    language:    v.optional(v.string()),
+  },
+  handler: async (_ctx, { description, language }) => {
     const client = getClient()
     const response = await client.messages.create({
       model: 'claude-sonnet-4-6',
       max_tokens: 2048,
-      system: SYSTEM_PROMPT,
+      system: buildSystemPrompt(language),
       messages: [
         {
           role: 'user',

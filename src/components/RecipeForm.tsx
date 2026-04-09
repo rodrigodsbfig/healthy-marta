@@ -3,6 +3,8 @@ import { useMutation } from 'convex/react'
 import { api } from '../../convex/_generated/api'
 import { X, Plus, Trash2 } from 'lucide-react'
 import { cn } from '@/lib/utils'
+import { useLanguage } from '@/lib/language'
+import { TAG_KEYS, translateTag } from '@/lib/translations'
 import type { Id } from '../../convex/_generated/dataModel'
 
 type Ingredient = { name: string; quantity: string; unit: string }
@@ -26,12 +28,11 @@ type RecipePrefill = Omit<RecipeData, '_id'>
 interface RecipeFormProps {
   open: boolean
   onClose: () => void
-  existing?: RecipeData   // editing a saved recipe
-  prefill?: RecipePrefill // pre-filling from AI import
+  existing?: RecipeData
+  prefill?: RecipePrefill
 }
 
 const UNITS = ['g', 'kg', 'ml', 'L', 'tbsp', 'tsp', 'cup', 'pieces', 'whole', 'cloves', 'slices', 'to taste']
-const TAGS = ['Breakfast', 'Lunch', 'Dinner', 'Snack', 'Vegetarian', 'Vegan', 'High Protein', 'Low Carb', 'Gluten-Free', 'Dairy-Free']
 
 function Field({ label, children }: { label: string; children: React.ReactNode }) {
   return (
@@ -45,6 +46,7 @@ function Field({ label, children }: { label: string; children: React.ReactNode }
 const inputClass = 'w-full bg-[#FDF8F2] border border-[#E8D9C8] rounded-xl px-3 py-2.5 text-sm text-[#2D1F3D] placeholder:text-[#7A6775] outline-none focus:border-[#7B5EA7] transition-colors'
 
 export function RecipeForm({ open, onClose, existing, prefill }: RecipeFormProps) {
+  const { t, lang } = useLanguage()
   const create = useMutation(api.functions.recipes.create)
   const update = useMutation(api.functions.recipes.update)
 
@@ -59,7 +61,6 @@ export function RecipeForm({ open, onClose, existing, prefill }: RecipeFormProps
   const [nutrition, setNutrition] = useState<Nutrition>({ calories: '', protein: '', carbs: '', fat: '' })
   const [saving, setSaving] = useState(false)
 
-  // Pre-fill when editing or importing
   useEffect(() => {
     const source = existing ?? prefill
     if (source) {
@@ -137,6 +138,13 @@ export function RecipeForm({ open, onClose, existing, prefill }: RecipeFormProps
     }
   }
 
+  const nutritionFields = [
+    { key: 'calories' as const, label: t('cal_unit') },
+    { key: 'protein'  as const, label: t('protein_unit') },
+    { key: 'carbs'    as const, label: t('carbs_unit') },
+    { key: 'fat'      as const, label: t('fat_unit') },
+  ]
+
   return (
     <>
       {/* Backdrop */}
@@ -158,7 +166,7 @@ export function RecipeForm({ open, onClose, existing, prefill }: RecipeFormProps
         {/* Header */}
         <div className="flex items-center justify-between px-6 py-5 border-b border-[#E8D9C8]">
           <h2 className="font-display font-bold text-lg text-[#2D1F3D]">
-            {existing ? 'Edit Recipe' : 'New Recipe'}
+            {existing ? t('edit_recipe') : t('new_recipe')}
           </h2>
           <button onClick={onClose} className="text-[#7A6775] hover:text-[#2D1F3D] transition-colors">
             <X size={20} />
@@ -168,41 +176,40 @@ export function RecipeForm({ open, onClose, existing, prefill }: RecipeFormProps
         {/* Scrollable body */}
         <div className="flex-1 overflow-y-auto px-6 py-5 space-y-5">
 
-          <Field label="Title">
+          <Field label={t('title_field')}>
             <input
               className={inputClass}
-              placeholder="e.g. Salmon & Quinoa"
+              placeholder={t('title_ph')}
               value={title}
               onChange={e => setTitle(e.target.value)}
             />
           </Field>
 
-          <Field label="Description (optional)">
+          <Field label={t('desc_optional')}>
             <textarea
               className={cn(inputClass, 'resize-none h-16')}
-              placeholder="A short description..."
+              placeholder={t('desc_ph')}
               value={description}
               onChange={e => setDescription(e.target.value)}
             />
           </Field>
 
-          {/* Servings + times */}
           <div className="grid grid-cols-3 gap-3">
-            <Field label="Servings">
+            <Field label={t('servings')}>
               <input type="number" min="1" className={inputClass} value={servings} onChange={e => setServings(e.target.value)} />
             </Field>
-            <Field label="Prep (min)">
+            <Field label={t('prep_min')}>
               <input type="number" min="0" className={inputClass} value={prepTime} onChange={e => setPrepTime(e.target.value)} />
             </Field>
-            <Field label="Cook (min)">
+            <Field label={t('cook_min')}>
               <input type="number" min="0" className={inputClass} value={cookTime} onChange={e => setCookTime(e.target.value)} />
             </Field>
           </div>
 
           {/* Tags */}
-          <Field label="Tags">
+          <Field label={t('tags_label')}>
             <div className="flex flex-wrap gap-2">
-              {TAGS.map(tag => (
+              {TAG_KEYS.map(tag => (
                 <button
                   key={tag}
                   type="button"
@@ -214,26 +221,26 @@ export function RecipeForm({ open, onClose, existing, prefill }: RecipeFormProps
                       : 'bg-[#FDF8F2] text-[#7A6775] border-[#E8D9C8] hover:border-[#7B5EA7]',
                   )}
                 >
-                  {tag}
+                  {translateTag(tag, lang)}
                 </button>
               ))}
             </div>
           </Field>
 
           {/* Ingredients */}
-          <Field label="Ingredients">
+          <Field label={t('ingredients')}>
             <div className="space-y-2">
               {ingredients.map((ing, i) => (
                 <div key={i} className="flex gap-2 items-center">
                   <input
                     className={cn(inputClass, 'flex-1')}
-                    placeholder="Ingredient"
+                    placeholder={t('ingredient')}
                     value={ing.name}
                     onChange={e => updateIngredient(i, 'name', e.target.value)}
                   />
                   <input
                     className={cn(inputClass, 'w-16')}
-                    placeholder="Qty"
+                    placeholder={t('qty')}
                     type="number"
                     min="0"
                     value={ing.quantity}
@@ -260,20 +267,20 @@ export function RecipeForm({ open, onClose, existing, prefill }: RecipeFormProps
                 onClick={addIngredient}
                 className="flex items-center gap-1.5 text-[#7B5EA7] text-[13px] font-semibold hover:opacity-70 transition-opacity"
               >
-                <Plus size={15} /> Add ingredient
+                <Plus size={15} /> {t('add_ingredient')}
               </button>
             </div>
           </Field>
 
           {/* Steps */}
-          <Field label="Instructions">
+          <Field label={t('instructions')}>
             <div className="space-y-2">
               {steps.map((step, i) => (
                 <div key={i} className="flex gap-2 items-start">
                   <span className="text-[#7B5EA7] font-bold text-sm w-5 shrink-0 pt-2.5">{i + 1}.</span>
                   <textarea
                     className={cn(inputClass, 'flex-1 resize-none h-16')}
-                    placeholder={`Step ${i + 1}...`}
+                    placeholder={`${t('step_prefix')} ${i + 1}...`}
                     value={step}
                     onChange={e => updateStep(i, e.target.value)}
                   />
@@ -291,17 +298,17 @@ export function RecipeForm({ open, onClose, existing, prefill }: RecipeFormProps
                 onClick={addStep}
                 className="flex items-center gap-1.5 text-[#7B5EA7] text-[13px] font-semibold hover:opacity-70 transition-opacity"
               >
-                <Plus size={15} /> Add step
+                <Plus size={15} /> {t('add_step')}
               </button>
             </div>
           </Field>
 
-          {/* Nutrition (optional) */}
-          <Field label="Nutrition per serving (optional)">
+          {/* Nutrition */}
+          <Field label={t('nutrition_label')}>
             <div className="grid grid-cols-4 gap-2">
-              {(['calories', 'protein', 'carbs', 'fat'] as const).map(key => (
+              {nutritionFields.map(({ key, label }) => (
                 <div key={key}>
-                  <p className="text-[11px] text-[#7A6775] mb-1 capitalize">{key === 'calories' ? 'kcal' : key + ' (g)'}</p>
+                  <p className="text-[11px] text-[#7A6775] mb-1">{label}</p>
                   <input
                     type="number"
                     min="0"
@@ -322,14 +329,14 @@ export function RecipeForm({ open, onClose, existing, prefill }: RecipeFormProps
             onClick={onClose}
             className="flex-1 border border-[#E8D9C8] text-[#7A6775] font-semibold py-2.5 rounded-full hover:bg-[#FDF8F2] transition-colors text-sm"
           >
-            Cancel
+            {t('cancel')}
           </button>
           <button
             onClick={handleSave}
             disabled={!title.trim() || saving}
             className="flex-1 bg-[#7B5EA7] text-white font-semibold py-2.5 rounded-full hover:bg-[#6a4e94] transition-colors text-sm disabled:opacity-50"
           >
-            {saving ? 'Saving…' : existing ? 'Save changes' : 'Add recipe'}
+            {saving ? t('saving') : existing ? t('save_changes') : t('add_recipe')}
           </button>
         </div>
       </div>
