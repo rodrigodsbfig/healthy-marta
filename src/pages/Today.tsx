@@ -7,7 +7,7 @@ import { cn } from '@/lib/utils'
 import { useLanguage } from '@/lib/language'
 import { MEAL_LABELS, DAY_SHORT } from '@/lib/translations'
 import { useGoals } from '@/hooks/useGoals'
-import { getWeekStart } from '@/lib/dates'
+import { getWeekStart, weekDays } from '@/lib/dates'
 import { LogMealModal } from '@/components/LogMealModal'
 
 const MACRO_SECONDARY = [
@@ -67,11 +67,16 @@ export function Today() {
   const today = todayStr()
   const weekStart = getWeekStart()
   const dayIdx = todayDayIndex()
+  const days = weekDays(weekStart)
 
   const plan = useQuery(api.functions.mealPlans.getByWeek, { weekStart })
   const allRecipes = useQuery(api.functions.recipes.list)
   const log = useQuery(api.functions.nutritionLogs.getByDate, { date: today })
+  const weekHistory = useQuery(api.functions.nutritionLogs.getLastNDays, { days: 7 })
   const removeEntry = useMutation(api.functions.nutritionLogs.removeEntry)
+
+  // Map date → calorie total from history
+  const calByDate = new Map((weekHistory ?? []).map(d => [d.date, d.calories]))
 
   const recipeMap = new Map(allRecipes?.map(r => [r._id, r]) ?? [])
   const todaySlots = (plan?.slots ?? []).filter(s => s.day === dayIdx)
@@ -243,13 +248,23 @@ export function Today() {
           <div className="w-56 shrink-0 bg-white rounded-2xl p-5 shadow-[0_4px_20px_0_#7B5EA714] h-fit">
             <h2 className="font-display font-bold text-[15px] text-[#2D1F3D] mb-1">{t('this_week')}</h2>
             <p className="text-[11px] text-[#7A6775] mb-4">
-              {(plan?.slots ?? []).length} {lang === 'pt' ? 'refeições' : 'meals planned'}
+              {lang === 'pt' ? 'calorias por dia' : 'calories per day'}
             </p>
 
-            <div className="space-y-2">
+            <div className="space-y-2.5">
               {DAY_SHORT[lang].map((day, i) => {
-                const count = (plan?.slots ?? []).filter(s => s.day === i).length
+                const dateStr = days[i]
+                const cal = calByDate.get(dateStr) ?? 0
+                const pct = Math.min((cal / calGoal) * 100, 100)
                 const isToday = i === dayIdx
+                const isFuture = i > dayIdx
+                const barColor = isFuture
+                  ? 'bg-[#EEE0FF]'
+                  : pct >= 80 ? 'bg-[#7B5EA7]'
+                  : pct >= 40 ? 'bg-[#E89B6C]'
+                  : cal > 0   ? 'bg-[#C4B0E0]'
+                  : 'bg-[#EEE0FF]'
+
                 return (
                   <div key={day} className="flex items-center gap-2">
                     <span className={cn(
@@ -258,27 +273,28 @@ export function Today() {
                     )}>
                       {day}
                     </span>
-                    <div className="flex gap-1 flex-1">
-                      {[0, 1, 2, 3].map(j => (
+                    <div className="flex-1 h-2.5 bg-[#EEE0FF] rounded-full overflow-hidden">
+                      {!isFuture && pct > 0 && (
                         <div
-                          key={j}
-                          className={cn(
-                            'flex-1 h-3.5 rounded',
-                            j < count
-                              ? isToday ? 'bg-[#7B5EA7]' : 'bg-[#C4B0E0]'
-                              : 'bg-[#EEE0FF]'
-                          )}
+                          className={cn('h-2.5 rounded-full transition-all', barColor)}
+                          style={{ width: `${pct}%` }}
                         />
-                      ))}
+                      )}
                     </div>
-                    {count > 0 && (
-                      <span className={cn('text-[10px] w-3 text-right', isToday ? 'text-[#7B5EA7] font-bold' : 'text-[#7A6775]')}>
-                        {count}
-                      </span>
-                    )}
+                    <span className={cn(
+                      'text-[10px] w-8 text-right tabular-nums shrink-0',
+                      isToday ? 'font-bold text-[#7B5EA7]' : 'text-[#7A6775]'
+                    )}>
+                      {isFuture ? '' : cal > 0 ? `${Math.round(cal / 100) * 100}` : '—'}
+                    </span>
                   </div>
                 )
               })}
+            </div>
+
+            <div className="mt-4 pt-3 border-t border-[#E8D9C8] flex items-center justify-between">
+              <span className="text-[10px] text-[#7A6775]">{lang === 'pt' ? 'objetivo' : 'goal'}</span>
+              <span className="text-[10px] font-semibold text-[#7B5EA7]">{calGoal} kcal</span>
             </div>
           </div>
         </div>

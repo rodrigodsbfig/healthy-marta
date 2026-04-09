@@ -1,12 +1,12 @@
 import { useState } from 'react'
 import { useQuery, useMutation } from 'convex/react'
-import { X, Search, ChefHat, Check } from 'lucide-react'
+import { X, Search, ChefHat, Check, Clock } from 'lucide-react'
 import { api } from '../../convex/_generated/api'
 import type { Id } from '../../convex/_generated/dataModel'
 import { cn } from '@/lib/utils'
 import { useLanguage } from '@/lib/language'
 
-type Tab = 'recipe' | 'manual'
+type Tab = 'recent' | 'recipe' | 'manual'
 
 interface LogMealModalProps {
   open: boolean
@@ -17,36 +17,34 @@ interface LogMealModalProps {
 
 export function LogMealModal({ open, onClose, date, prefillRecipeId }: LogMealModalProps) {
   const { t } = useLanguage()
-  const recipes = useQuery(api.functions.recipes.list)
-  const logMeal = useMutation(api.functions.nutritionLogs.logMeal)
+  const recipes    = useQuery(api.functions.recipes.list)
+  const recent     = useQuery(api.functions.nutritionLogs.getRecentEntries, { days: 7 })
+  const logMeal    = useMutation(api.functions.nutritionLogs.logMeal)
 
-  const [tab, setTab] = useState<Tab>(prefillRecipeId ? 'recipe' : 'recipe')
-  const [search, setSearch] = useState('')
+  const [tab, setTab]               = useState<Tab>(prefillRecipeId ? 'recipe' : 'recent')
+  const [search, setSearch]         = useState('')
   const [selectedId, setSelectedId] = useState<Id<'recipes'> | null>(prefillRecipeId ?? null)
-  const [servings, setServings] = useState('1')
-  const [saving, setSaving] = useState(false)
+  const [servings, setServings]     = useState('1')
+  const [saving, setSaving]         = useState(false)
 
-  // Manual entry
-  const [manualLabel, setManualLabel] = useState('')
-  const [manualCal, setManualCal] = useState('')
+  const [manualLabel,   setManualLabel]   = useState('')
+  const [manualCal,     setManualCal]     = useState('')
   const [manualProtein, setManualProtein] = useState('')
-  const [manualCarbs, setManualCarbs] = useState('')
-  const [manualFat, setManualFat] = useState('')
+  const [manualCarbs,   setManualCarbs]   = useState('')
+  const [manualFat,     setManualFat]     = useState('')
 
   const filtered = (recipes ?? []).filter(r =>
     r.title.toLowerCase().includes(search.toLowerCase())
   )
 
   const selectedRecipe = recipes?.find(r => r._id === selectedId)
-  const numServings = Number(servings) || 1
-  const scaleFactor = selectedRecipe ? numServings / selectedRecipe.servings : 1
+  const numServings    = Number(servings) || 1
+  const scaleFactor    = selectedRecipe ? numServings / selectedRecipe.servings : 1
 
   function reset() {
-    setSearch('')
-    setSelectedId(prefillRecipeId ?? null)
-    setServings('1')
+    setSearch(''); setSelectedId(prefillRecipeId ?? null); setServings('1')
     setManualLabel(''); setManualCal(''); setManualProtein(''); setManualCarbs(''); setManualFat('')
-    setTab('recipe')
+    setTab(prefillRecipeId ? 'recipe' : 'recent')
   }
 
   function handleClose() { reset(); onClose() }
@@ -60,7 +58,7 @@ export function LogMealModal({ open, onClose, date, prefillRecipeId }: LogMealMo
         date,
         entry: {
           recipeId: selectedRecipe._id,
-          label: selectedRecipe.title,
+          label:    selectedRecipe.title,
           servings: numServings,
           calories: n ? Math.round(n.calories * scaleFactor) : 0,
           protein:  n ? Math.round(n.protein  * scaleFactor) : 0,
@@ -69,9 +67,7 @@ export function LogMealModal({ open, onClose, date, prefillRecipeId }: LogMealMo
         },
       })
       handleClose()
-    } finally {
-      setSaving(false)
-    }
+    } finally { setSaving(false) }
   }
 
   async function handleLogManual() {
@@ -81,23 +77,35 @@ export function LogMealModal({ open, onClose, date, prefillRecipeId }: LogMealMo
       await logMeal({
         date,
         entry: {
-          label: manualLabel.trim(),
+          label:    manualLabel.trim(),
           servings: 1,
-          calories: Number(manualCal) || 0,
+          calories: Number(manualCal)     || 0,
           protein:  Number(manualProtein) || 0,
-          carbs:    Number(manualCarbs) || 0,
-          fat:      Number(manualFat) || 0,
+          carbs:    Number(manualCarbs)   || 0,
+          fat:      Number(manualFat)     || 0,
         },
       })
       handleClose()
-    } finally {
-      setSaving(false)
-    }
+    } finally { setSaving(false) }
+  }
+
+  async function handleLogRecent(entry: NonNullable<typeof recent>[number]) {
+    setSaving(true)
+    try {
+      await logMeal({ date, entry: { label: entry.label, servings: entry.servings, calories: entry.calories, protein: entry.protein, carbs: entry.carbs, fat: entry.fat } })
+      handleClose()
+    } finally { setSaving(false) }
   }
 
   if (!open) return null
 
   const inputCls = 'w-full bg-[#FDF8F2] border border-[#E8D9C8] rounded-xl px-3 py-2.5 text-sm text-[#2D1F3D] placeholder:text-[#7A6775] outline-none focus:border-[#7B5EA7] transition-colors'
+
+  const TABS: { id: Tab; label: string }[] = [
+    { id: 'recent', label: t('recent_meals') },
+    { id: 'recipe', label: t('from_recipe')  },
+    { id: 'manual', label: t('manual_entry') },
+  ]
 
   return (
     <div className="fixed inset-0 bg-[#2D1F3D]/30 z-50 flex items-center justify-center p-4">
@@ -111,24 +119,65 @@ export function LogMealModal({ open, onClose, date, prefillRecipeId }: LogMealMo
         </div>
 
         {/* Tabs */}
-        <div className="flex gap-2 px-6 pt-4">
-          {(['recipe', 'manual'] as Tab[]).map(id => (
+        <div className="flex gap-1.5 px-6 pt-4">
+          {TABS.map(({ id, label }) => (
             <button
               key={id}
               onClick={() => setTab(id)}
               className={cn(
-                'flex-1 py-2 rounded-full text-[13px] font-semibold border transition-colors',
+                'flex-1 py-1.5 rounded-full text-[12px] font-semibold border transition-colors',
                 tab === id
                   ? 'bg-[#7B5EA7] text-white border-[#7B5EA7]'
                   : 'text-[#7A6775] border-[#E8D9C8] hover:bg-[#F5EDE0]',
               )}
             >
-              {id === 'recipe' ? t('from_recipe') : t('manual_entry')}
+              {label}
             </button>
           ))}
         </div>
 
-        {/* From recipe */}
+        {/* ── RECENT TAB ── */}
+        {tab === 'recent' && (
+          <div className="flex-1 overflow-y-auto px-6 py-4 space-y-2">
+            {recent === undefined && (
+              <p className="text-center text-[#7A6775] text-sm py-8">{t('loading')}</p>
+            )}
+            {recent !== undefined && recent.length === 0 && (
+              <div className="py-12 text-center">
+                <div className="w-12 h-12 bg-[#EEE0FF] rounded-2xl flex items-center justify-center mx-auto mb-3">
+                  <Clock size={20} className="text-[#7B5EA7]" />
+                </div>
+                <p className="text-sm font-semibold text-[#2D1F3D] mb-1">{t('no_recent_meals')}</p>
+                <p className="text-[12px] text-[#7A6775]">
+                  {t('from_recipe')} →
+                </p>
+              </div>
+            )}
+            {(recent ?? []).map((entry, i) => (
+              <button
+                key={i}
+                onClick={() => handleLogRecent(entry)}
+                disabled={saving}
+                className="w-full flex items-center gap-3 p-3.5 rounded-xl text-left bg-[#FDF8F2] hover:bg-[#EEE0FF] transition-colors border border-transparent hover:border-[#7B5EA7]/20 group disabled:opacity-50"
+              >
+                <div className="w-9 h-9 bg-[#EEE0FF] rounded-xl flex items-center justify-center shrink-0">
+                  <span className="text-[#7B5EA7] text-xs font-bold">{entry.calories}</span>
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-semibold text-[#2D1F3D] truncate">{entry.label}</p>
+                  <p className="text-[11px] text-[#7A6775]">
+                    {entry.protein}g P · {entry.carbs}g C · {entry.fat}g F
+                  </p>
+                </div>
+                <span className="text-[11px] font-semibold text-[#7B5EA7] opacity-0 group-hover:opacity-100 transition-opacity shrink-0">
+                  {t('log_again')}
+                </span>
+              </button>
+            ))}
+          </div>
+        )}
+
+        {/* ── FROM RECIPE TAB ── */}
         {tab === 'recipe' && (
           <>
             <div className="px-6 pt-4 relative">
@@ -202,7 +251,7 @@ export function LogMealModal({ open, onClose, date, prefillRecipeId }: LogMealMo
           </>
         )}
 
-        {/* Manual entry */}
+        {/* ── MANUAL TAB ── */}
         {tab === 'manual' && (
           <div className="px-6 py-4 space-y-3 flex-1">
             <input
@@ -213,10 +262,10 @@ export function LogMealModal({ open, onClose, date, prefillRecipeId }: LogMealMo
             />
             <div className="grid grid-cols-4 gap-2">
               {[
-                { label: 'kcal', value: manualCal, set: setManualCal },
+                { label: 'kcal', value: manualCal,     set: setManualCal     },
                 { label: 'P (g)', value: manualProtein, set: setManualProtein },
-                { label: 'C (g)', value: manualCarbs, set: setManualCarbs },
-                { label: 'F (g)', value: manualFat, set: setManualFat },
+                { label: 'C (g)', value: manualCarbs,   set: setManualCarbs   },
+                { label: 'F (g)', value: manualFat,     set: setManualFat     },
               ].map(({ label, value, set }) => (
                 <div key={label}>
                   <p className="text-[11px] text-[#7A6775] mb-1">{label}</p>

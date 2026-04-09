@@ -80,7 +80,7 @@ export default defineSchema({
   }).index('by_user', ['userId']),
 
   pantryItems: defineTable({
-    userId: v.id('users'),
+    userId: v.optional(v.id('users')),
     name: v.string(),
     quantity: v.number(),
     unit: v.string(),

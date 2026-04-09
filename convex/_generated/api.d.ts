@@ -11,6 +11,7 @@
 import type * as functions_importRecipe from "../functions/importRecipe.js";
 import type * as functions_mealPlans from "../functions/mealPlans.js";
 import type * as functions_nutritionLogs from "../functions/nutritionLogs.js";
+import type * as functions_pantry from "../functions/pantry.js";
 import type * as functions_prepSessions from "../functions/prepSessions.js";
 import type * as functions_recipes from "../functions/recipes.js";
 import type * as functions_shoppingLists from "../functions/shoppingLists.js";
@@ -25,6 +26,7 @@ declare const fullApi: ApiFromModules<{
   "functions/importRecipe": typeof functions_importRecipe;
   "functions/mealPlans": typeof functions_mealPlans;
   "functions/nutritionLogs": typeof functions_nutritionLogs;
+  "functions/pantry": typeof functions_pantry;
   "functions/prepSessions": typeof functions_prepSessions;
   "functions/recipes": typeof functions_recipes;
   "functions/shoppingLists": typeof functions_shoppingLists;

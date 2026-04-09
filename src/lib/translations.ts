@@ -204,6 +204,29 @@ const en = {
   auth_coming:       'Auth coming in Phase 2.',
   language_label:    'Language',
 
+  // Pantry
+  to_buy:            'To Buy',
+  in_pantry:         'Pantry',
+  pantry_empty:      'Your pantry is empty',
+  pantry_hint:       'Add things you already have at home — they\'ll be flagged on your shopping list.',
+  add_to_pantry:     'Add to pantry',
+  have_it:           'Have it',
+
+  // Log modal — recent tab
+  recent_meals:      'Recent',
+  no_recent_meals:   'No meals logged yet',
+  log_again:         'Log again',
+
+  // Recipe filters
+  all_tags:          'All',
+  sort_default:      'Default',
+  sort_protein:      'Protein ↓',
+  sort_calories:     'Calories ↑',
+  sort_time:         'Quickest',
+
+  // Weekly history
+  no_data:           '—',
+
   // Nutrition labels
   cal_label:         'Calories',
   protein_label:     'Protein',
@@ -347,6 +370,29 @@ const pt: typeof en = {
   profile:           'Perfil',
   auth_coming:       'Autenticação na Fase 2.',
   language_label:    'Idioma',
+
+  // Pantry
+  to_buy:            'Para Comprar',
+  in_pantry:         'Despensa',
+  pantry_empty:      'A tua despensa está vazia',
+  pantry_hint:       'Adiciona o que já tens em casa — serão assinalados na lista de compras.',
+  add_to_pantry:     'Adicionar à despensa',
+  have_it:           'Tenho',
+
+  // Log modal — recent tab
+  recent_meals:      'Recente',
+  no_recent_meals:   'Nenhuma refeição registada ainda',
+  log_again:         'Registar de novo',
+
+  // Recipe filters
+  all_tags:          'Todos',
+  sort_default:      'Padrão',
+  sort_protein:      'Proteína ↓',
+  sort_calories:     'Calorias ↑',
+  sort_time:         'Mais rápido',
+
+  // Weekly history
+  no_data:           '—',
 
   cal_label:         'Calorias',
   protein_label:     'Proteína',
