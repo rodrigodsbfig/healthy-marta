@@ -5,7 +5,6 @@ import { MealPlan } from '@/pages/MealPlan'
 import { Recipes } from '@/pages/Recipes'
 import { RecipeDetail } from '@/pages/RecipeDetail'
 import { ShoppingList } from '@/pages/ShoppingList'
-import { Profile } from '@/pages/Profile'
 
 export default function App() {
   return (
@@ -16,7 +15,6 @@ export default function App() {
         <Route path="recipes" element={<Recipes />} />
         <Route path="recipes/:id" element={<RecipeDetail />} />
         <Route path="shopping-list" element={<ShoppingList />} />
-        <Route path="profile" element={<Profile />} />
       </Route>
     </Routes>
   )
