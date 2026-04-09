@@ -8,6 +8,19 @@ import { translateTag } from '@/lib/translations'
 import { RecipeForm } from '@/components/RecipeForm'
 import { RecipeImport } from '@/components/RecipeImport'
 
+const CARD_PALETTES = [
+  { bg: 'bg-[#EEE0FF]', icon: 'text-[#7B5EA7]' },
+  { bg: 'bg-[#E8F5EE]', icon: 'text-[#2D9B5C]' },
+  { bg: 'bg-[#FFF3E8]', icon: 'text-[#E89B6C]' },
+  { bg: 'bg-[#F5EDE0]', icon: 'text-[#9B7060]' },
+]
+
+function cardPalette(title: string) {
+  let hash = 0
+  for (let i = 0; i < title.length; i++) hash = (hash * 31 + title.charCodeAt(i)) >>> 0
+  return CARD_PALETTES[hash % CARD_PALETTES.length]
+}
+
 type RecipePrefill = {
   title: string
   description?: string
@@ -113,8 +126,8 @@ export function Recipes() {
                 onClick={() => navigate(`/recipes/${r._id}`)}
                 className="bg-white rounded-2xl overflow-hidden shadow-[0_4px_24px_0_#7B5EA71A] cursor-pointer hover:shadow-[0_4px_32px_0_#7B5EA730] hover:-translate-y-0.5 transition-all"
               >
-                <div className="h-36 bg-[#EEE0FF] flex items-center justify-center">
-                  <ChefHat size={40} className="text-[#7B5EA7] opacity-40" />
+                <div className={`h-36 ${cardPalette(r.title).bg} flex items-center justify-center`}>
+                  <ChefHat size={40} className={`${cardPalette(r.title).icon} opacity-30`} />
                 </div>
                 <div className="p-4 space-y-2">
                   <h3 className="font-display font-bold text-sm text-[#2D1F3D] leading-snug">{r.title}</h3>

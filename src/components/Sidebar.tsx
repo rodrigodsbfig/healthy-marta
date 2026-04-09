@@ -27,15 +27,22 @@ export function Sidebar() {
   ]
 
   return (
-    <aside className="w-60 shrink-0 bg-white h-screen flex flex-col border-r border-[#E8D9C8] sticky top-0">
+    <aside className="w-56 shrink-0 bg-white h-screen flex flex-col border-r border-[#E8D9C8] sticky top-0">
       {/* Logo */}
-      <div className="px-6 pt-7 pb-5 flex items-center gap-3">
-        <div className="w-8 h-8 rounded-lg bg-[#EEE0FF] flex items-center justify-center">
-          <span className="text-[#7B5EA7] text-sm font-bold">M</span>
+      <div className="px-5 pt-6 pb-5">
+        <div className="flex items-center gap-2.5">
+          <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-[#7B5EA7] to-[#9B7EC8] flex items-center justify-center shadow-[0_2px_8px_0_#7B5EA740]">
+            <span className="text-white text-sm font-bold">M</span>
+          </div>
+          <div>
+            <span className="font-display font-bold text-[14px] text-[#2D1F3D] leading-none block">
+              healthy
+            </span>
+            <span className="font-display font-bold text-[14px] text-[#7B5EA7] leading-none block">
+              Marta
+            </span>
+          </div>
         </div>
-        <span className="font-display font-bold text-[15px] text-[#2D1F3D]">
-          healthy Marta
-        </span>
       </div>
 
       {/* Nav */}
@@ -47,15 +54,22 @@ export function Sidebar() {
             end={to === '/'}
             className={({ isActive }) =>
               cn(
-                'flex items-center gap-3 px-3 py-2.5 rounded-[10px] text-sm transition-colors',
+                'flex items-center gap-3 px-3 py-2.5 rounded-[10px] text-sm transition-colors relative',
                 isActive
                   ? 'bg-[#EEE0FF] text-[#7B5EA7] font-semibold'
-                  : 'text-[#7A6775] hover:bg-[#F5EDE0]',
+                  : 'text-[#7A6775] hover:bg-[#F5EDE0] hover:text-[#2D1F3D]',
               )
             }
           >
-            <Icon size={18} strokeWidth={1.8} />
-            {label}
+            {({ isActive }) => (
+              <>
+                {isActive && (
+                  <span className="absolute left-0 top-1.5 bottom-1.5 w-[3px] bg-[#7B5EA7] rounded-full" />
+                )}
+                <Icon size={17} strokeWidth={isActive ? 2.2 : 1.8} />
+                {label}
+              </>
+            )}
           </NavLink>
         ))}
       </nav>
@@ -64,13 +78,13 @@ export function Sidebar() {
       <div className="border-t border-[#E8D9C8] mx-4" />
       <div className="p-4 space-y-3">
         {/* User info */}
-        <div className="flex items-center gap-3">
-          <div className="w-9 h-9 rounded-full bg-[#EEE0FF] flex items-center justify-center shrink-0">
-            <span className="text-[#7B5EA7] text-sm font-semibold">M</span>
+        <div className="flex items-center gap-2.5">
+          <div className="w-8 h-8 rounded-full bg-gradient-to-br from-[#7B5EA7] to-[#9B7EC8] flex items-center justify-center shrink-0 shadow-[0_2px_6px_0_#7B5EA730]">
+            <span className="text-white text-xs font-semibold">M</span>
           </div>
-          <div>
-            <p className="text-[13px] font-semibold text-[#2D1F3D]">Marta</p>
-            <p className="text-[11px] text-[#7A6775]">marta@email.com</p>
+          <div className="min-w-0">
+            <p className="text-[13px] font-semibold text-[#2D1F3D] leading-tight">Marta</p>
+            <p className="text-[10px] text-[#7A6775] truncate">marta@email.com</p>
           </div>
         </div>
 
@@ -81,7 +95,7 @@ export function Sidebar() {
               key={l.value}
               onClick={() => setLang(l.value)}
               className={cn(
-                'flex-1 py-1.5 rounded-lg text-[12px] font-semibold transition-colors border',
+                'flex-1 py-1.5 rounded-lg text-[11px] font-semibold transition-colors border',
                 lang === l.value
                   ? 'bg-[#7B5EA7] text-white border-[#7B5EA7]'
                   : 'text-[#7A6775] border-[#E8D9C8] hover:bg-[#F5EDE0]',

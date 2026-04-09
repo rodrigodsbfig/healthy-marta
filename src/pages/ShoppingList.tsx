@@ -22,7 +22,7 @@ function CheckIcon({ checked }: { checked: boolean }) {
 }
 
 export function ShoppingList() {
-  const { t } = useLanguage()
+  const { t, lang } = useLanguage()
   const weekStart = getWeekStart()
   const days = weekDays(weekStart)
   const weekLabel = `${formatShort(days[0])} – ${formatShort(days[6])}`
@@ -101,11 +101,18 @@ export function ShoppingList() {
 
       {/* Progress bar */}
       {items.length > 0 && (
-        <div className="w-full h-2 bg-[#EEE0FF] rounded-full">
-          <div
-            className="h-2 bg-[#7B5EA7] rounded-full transition-all"
-            style={{ width: `${items.length ? (checked / items.length) * 100 : 0}%` }}
-          />
+        <div className="space-y-1.5">
+          <div className="w-full h-3 bg-[#EEE0FF] rounded-full overflow-hidden">
+            <div
+              className="h-3 bg-[#7B5EA7] rounded-full transition-all duration-500"
+              style={{ width: `${items.length ? (checked / items.length) * 100 : 0}%` }}
+            />
+          </div>
+          {checked === items.length && items.length > 0 && (
+            <p className="text-[12px] font-semibold text-[#7B5EA7] text-center">
+              ✓ {lang === 'pt' ? 'Lista completa!' : 'All done!'}
+            </p>
+          )}
         </div>
       )}
 
