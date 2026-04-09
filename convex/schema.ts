@@ -54,17 +54,14 @@ export default defineSchema({
   }).index('by_user_week', ['userId', 'weekStart']),
 
   prepSessions: defineTable({
-    userId: v.id('users'),
-    mealPlanId: v.id('mealPlans'),
-    scheduledDate: v.string(),
-    steps: v.array(
-      v.object({
-        recipeId: v.id('recipes'),
-        stepIndex: v.number(),
-        completed: v.boolean(),
-      })
-    ),
-  }).index('by_user', ['userId']),
+    userId: v.optional(v.id('users')),
+    weekStart: v.string(),
+    items: v.array(v.object({
+      recipeId: v.id('recipes'),
+      servings: v.number(),
+      completed: v.boolean(),
+    })),
+  }).index('by_week', ['weekStart']),
 
   shoppingLists: defineTable({
     userId: v.optional(v.id('users')),
@@ -92,7 +89,7 @@ export default defineSchema({
   }).index('by_user', ['userId']),
 
   nutritionLogs: defineTable({
-    userId: v.id('users'),
+    userId: v.optional(v.id('users')),
     date: v.string(), // ISO date string
     entries: v.array(
       v.object({
@@ -105,5 +102,7 @@ export default defineSchema({
         fat: v.number(),
       })
     ),
-  }).index('by_user_date', ['userId', 'date']),
+  })
+    .index('by_user_date', ['userId', 'date'])
+    .index('by_date', ['date']),
 })

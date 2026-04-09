@@ -64,6 +64,7 @@ const en = {
   nav_recipes:       'Recipes',
   nav_shopping:      'Shopping List',
   nav_profile:       'Profile',
+  nav_prep:          'Prep',
 
   // Common
   cancel:            'Cancel',
@@ -82,9 +83,36 @@ const en = {
   good_morning:      'Good morning',
   log_a_meal:        'Log a meal',
   todays_menu:       "Today's Menu",
+  todays_plan:       "Today's Plan",
+  logged_meals:      'Logged',
+  no_planned_meals:  'Nothing planned for today',
+  goal:              'goal',
+  remaining:         'remaining',
+  log:               'Log',
   this_week:         'This Week',
   view_meal_plan:    'View meal plan',
   date_locale:       'en-GB',
+
+  // Log meal modal
+  log_meal_title:    'Log a meal',
+  from_recipe:       'From recipe',
+  manual_entry:      'Manual',
+  select_recipe:     'Select a recipe',
+  log_confirm:       'Log meal',
+  no_nutrition:      'No nutrition data',
+
+  // Prep session
+  prep_session:      'Prep Session',
+  gen_prep:          'Generate from plan',
+  recipes_prepped:   'recipes prepped',
+  all_ingredients:   'All Ingredients',
+  no_prep_yet:       'No prep plan yet',
+  prep_hint:         'Generate a prep plan from your meal plan',
+  prepped:           'Prepped',
+
+  // Recipe scaling
+  adjust_servings:   'Servings',
+  scaled_note:       'Scaled',
 
   // Meal Plan
   meal_plan:         'Meal Plan',
@@ -193,6 +221,7 @@ const pt: typeof en = {
   nav_recipes:       'Receitas',
   nav_shopping:      'Compras',
   nav_profile:       'Perfil',
+  nav_prep:          'Prep',
 
   cancel:            'Cancelar',
   delete:            'Eliminar',
@@ -209,9 +238,33 @@ const pt: typeof en = {
   good_morning:      'Bom dia',
   log_a_meal:        'Registar refeição',
   todays_menu:       'Menu de Hoje',
+  todays_plan:       'Plano de Hoje',
+  logged_meals:      'Registado',
+  no_planned_meals:  'Nada planeado para hoje',
+  goal:              'objectivo',
+  remaining:         'restante',
+  log:               'Registar',
   this_week:         'Esta Semana',
   view_meal_plan:    'Ver plano de refeições',
   date_locale:       'pt-PT',
+
+  log_meal_title:    'Registar refeição',
+  from_recipe:       'De receita',
+  manual_entry:      'Manual',
+  select_recipe:     'Selecionar receita',
+  log_confirm:       'Registar refeição',
+  no_nutrition:      'Sem dados nutricionais',
+
+  prep_session:      'Sessão de Prep',
+  gen_prep:          'Gerar do plano',
+  recipes_prepped:   'receitas preparadas',
+  all_ingredients:   'Todos os Ingredientes',
+  no_prep_yet:       'Sem plano de prep ainda',
+  prep_hint:         'Gera um plano de prep do teu plano de refeições',
+  prepped:           'Preparado',
+
+  adjust_servings:   'Porções',
+  scaled_note:       'Escalado',
 
   meal_plan:         'Plano de Refeições',
   add_meal:          'Adicionar refeição',

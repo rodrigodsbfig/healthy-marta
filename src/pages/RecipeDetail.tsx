@@ -16,6 +16,11 @@ export function RecipeDetail() {
   const remove = useMutation(api.functions.recipes.remove)
   const [editOpen, setEditOpen] = useState(false)
   const [confirmDelete, setConfirmDelete] = useState(false)
+  const [scaledServings, setScaledServings] = useState<number | null>(null)
+
+  const servings = scaledServings ?? recipe?.servings ?? 1
+  const scaleFactor = recipe ? servings / (recipe.servings || 1) : 1
+  const isScaled = recipe && scaledServings !== null && scaledServings !== recipe.servings
 
   const nutritionConfig = [
     { key: 'calories' as const, label: t('cal_label'),     unit: 'kcal', bg: 'bg-[#EEE0FF]', text: 'text-[#7B5EA7]' },
@@ -48,8 +53,6 @@ export function RecipeDetail() {
       </div>
     )
   }
-
-  const servings = recipe.servings
 
   return (
     <>
@@ -105,10 +108,25 @@ export function RecipeDetail() {
               <span className="flex items-center gap-1">
                 <Clock size={13} /> {recipe.prepTime + recipe.cookTime} {t('min')}
               </span>
-              <span className="flex items-center gap-1">
-                <Users size={13} /> {servings} {lang === 'pt' ? (servings === 1 ? 'porção' : 'porções') : (servings === 1 ? 'serving' : 'servings')}
+              <span className="flex items-center gap-2">
+                <Users size={13} />
+                <button
+                  onClick={() => setScaledServings(Math.max(1, servings - 1))}
+                  className="w-5 h-5 rounded-full bg-[#EEE0FF] text-[#7B5EA7] font-bold text-xs flex items-center justify-center hover:bg-[#e0d0f7] transition-colors"
+                >−</button>
+                <span className="font-semibold text-[#2D1F3D]">{servings}</span>
+                <button
+                  onClick={() => setScaledServings(servings + 1)}
+                  className="w-5 h-5 rounded-full bg-[#EEE0FF] text-[#7B5EA7] font-bold text-xs flex items-center justify-center hover:bg-[#e0d0f7] transition-colors"
+                >+</button>
+                <span>{lang === 'pt' ? (servings === 1 ? 'porção' : 'porções') : (servings === 1 ? 'serving' : 'servings')}</span>
               </span>
             </div>
+            {isScaled && (
+              <p className="text-[11px] text-[#7B5EA7] font-medium">
+                {t('scaled_note')} — {t('adjust_servings').toLowerCase()} {t('from_recipe').toLowerCase()} {recipe.servings}
+              </p>
+            )}
 
             {recipe.tags.length > 0 && (
               <div className="flex flex-wrap gap-1.5">
@@ -137,12 +155,16 @@ export function RecipeDetail() {
               <div>
                 <h2 className="font-display font-bold text-base text-[#2D1F3D] mb-3">{t('ingredients')}</h2>
                 <ul className="space-y-2">
-                  {recipe.ingredients.map((ing, i) => (
-                    <li key={i} className="flex justify-between text-sm">
-                      <span className="text-[#2D1F3D]">{ing.name}</span>
-                      <span className="text-[#7A6775]">{ing.quantity} {ing.unit}</span>
-                    </li>
-                  ))}
+                  {recipe.ingredients.map((ing, i) => {
+                    const qty = ing.quantity * scaleFactor
+                    const display = qty % 1 === 0 ? qty : parseFloat(qty.toFixed(1))
+                    return (
+                      <li key={i} className="flex justify-between text-sm">
+                        <span className="text-[#2D1F3D]">{ing.name}</span>
+                        <span className="text-[#7A6775]">{display} {ing.unit}</span>
+                      </li>
+                    )
+                  })}
                 </ul>
               </div>
             )}
