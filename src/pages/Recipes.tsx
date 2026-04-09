@@ -4,17 +4,43 @@ import { useNavigate } from 'react-router-dom'
 import { Plus, Search, Clock, ChefHat } from 'lucide-react'
 import { api } from '../../convex/_generated/api'
 import { RecipeForm } from '@/components/RecipeForm'
+import { RecipeImport } from '@/components/RecipeImport'
+
+type RecipePrefill = {
+  title: string
+  description?: string
+  servings: number
+  prepTime: number
+  cookTime: number
+  ingredients: { name: string; quantity: number; unit: string }[]
+  steps: string[]
+  tags: string[]
+  nutrition?: { calories: number; protein: number; carbs: number; fat: number }
+}
 
 export function Recipes() {
   const recipes = useQuery(api.functions.recipes.list)
   const navigate = useNavigate()
   const [search, setSearch] = useState('')
+  const [importOpen, setImportOpen] = useState(false)
   const [formOpen, setFormOpen] = useState(false)
+  const [prefill, setPrefill] = useState<RecipePrefill | undefined>(undefined)
 
   const filtered = (recipes ?? []).filter(r =>
     r.title.toLowerCase().includes(search.toLowerCase()) ||
     r.tags.some(t => t.toLowerCase().includes(search.toLowerCase()))
   )
+
+  function handleImported(data: RecipePrefill) {
+    setPrefill(data)
+    setImportOpen(false)
+    setFormOpen(true)
+  }
+
+  function handleFormClose() {
+    setFormOpen(false)
+    setPrefill(undefined)
+  }
 
   return (
     <>
@@ -28,7 +54,7 @@ export function Recipes() {
             </p>
           </div>
           <button
-            onClick={() => setFormOpen(true)}
+            onClick={() => setImportOpen(true)}
             className="bg-[#7B5EA7] text-white text-sm font-semibold px-5 py-2.5 rounded-full hover:bg-[#6a4e94] transition-colors flex items-center gap-2"
           >
             <Plus size={16} />
@@ -62,7 +88,7 @@ export function Recipes() {
             </p>
             {!search && (
               <button
-                onClick={() => setFormOpen(true)}
+                onClick={() => setImportOpen(true)}
                 className="bg-[#7B5EA7] text-white text-sm font-semibold px-5 py-2.5 rounded-full hover:bg-[#6a4e94] transition-colors"
               >
                 Add recipe
@@ -80,11 +106,9 @@ export function Recipes() {
                 onClick={() => navigate(`/recipes/${r._id}`)}
                 className="bg-white rounded-2xl overflow-hidden shadow-[0_4px_24px_0_#7B5EA71A] cursor-pointer hover:shadow-[0_4px_32px_0_#7B5EA730] hover:-translate-y-0.5 transition-all"
               >
-                {/* Image area */}
                 <div className="h-36 bg-[#EEE0FF] flex items-center justify-center">
                   <ChefHat size={40} className="text-[#7B5EA7] opacity-40" />
                 </div>
-                {/* Info */}
                 <div className="p-4 space-y-2">
                   <h3 className="font-display font-bold text-sm text-[#2D1F3D] leading-snug">{r.title}</h3>
                   {r.tags.length > 0 && (
@@ -112,7 +136,17 @@ export function Recipes() {
         )}
       </div>
 
-      <RecipeForm open={formOpen} onClose={() => setFormOpen(false)} />
+      <RecipeImport
+        open={importOpen}
+        onClose={() => setImportOpen(false)}
+        onImported={handleImported}
+      />
+
+      <RecipeForm
+        open={formOpen}
+        onClose={handleFormClose}
+        prefill={prefill}
+      />
     </>
   )
 }

@@ -21,10 +21,13 @@ type RecipeData = {
   nutrition?: { calories: number; protein: number; carbs: number; fat: number }
 }
 
+type RecipePrefill = Omit<RecipeData, '_id'>
+
 interface RecipeFormProps {
   open: boolean
   onClose: () => void
-  existing?: RecipeData
+  existing?: RecipeData   // editing a saved recipe
+  prefill?: RecipePrefill // pre-filling from AI import
 }
 
 const UNITS = ['g', 'kg', 'ml', 'L', 'tbsp', 'tsp', 'cup', 'pieces', 'whole', 'cloves', 'slices', 'to taste']
@@ -41,7 +44,7 @@ function Field({ label, children }: { label: string; children: React.ReactNode }
 
 const inputClass = 'w-full bg-[#FDF8F2] border border-[#E8D9C8] rounded-xl px-3 py-2.5 text-sm text-[#2D1F3D] placeholder:text-[#7A6775] outline-none focus:border-[#7B5EA7] transition-colors'
 
-export function RecipeForm({ open, onClose, existing }: RecipeFormProps) {
+export function RecipeForm({ open, onClose, existing, prefill }: RecipeFormProps) {
   const create = useMutation(api.functions.recipes.create)
   const update = useMutation(api.functions.recipes.update)
 
@@ -56,29 +59,30 @@ export function RecipeForm({ open, onClose, existing }: RecipeFormProps) {
   const [nutrition, setNutrition] = useState<Nutrition>({ calories: '', protein: '', carbs: '', fat: '' })
   const [saving, setSaving] = useState(false)
 
-  // Pre-fill when editing
+  // Pre-fill when editing or importing
   useEffect(() => {
-    if (existing) {
-      setTitle(existing.title)
-      setDescription(existing.description ?? '')
-      setServings(String(existing.servings))
-      setPrepTime(String(existing.prepTime))
-      setCookTime(String(existing.cookTime))
-      setIngredients(existing.ingredients.map(i => ({ name: i.name, quantity: String(i.quantity), unit: i.unit })))
-      setSteps(existing.steps)
-      setTags(existing.tags)
+    const source = existing ?? prefill
+    if (source) {
+      setTitle(source.title)
+      setDescription(source.description ?? '')
+      setServings(String(source.servings))
+      setPrepTime(String(source.prepTime))
+      setCookTime(String(source.cookTime))
+      setIngredients(source.ingredients.map(i => ({ name: i.name, quantity: String(i.quantity), unit: i.unit })))
+      setSteps(source.steps.length ? source.steps : [''])
+      setTags(source.tags)
       setNutrition({
-        calories: String(existing.nutrition?.calories ?? ''),
-        protein:  String(existing.nutrition?.protein  ?? ''),
-        carbs:    String(existing.nutrition?.carbs    ?? ''),
-        fat:      String(existing.nutrition?.fat      ?? ''),
+        calories: String(source.nutrition?.calories ?? ''),
+        protein:  String(source.nutrition?.protein  ?? ''),
+        carbs:    String(source.nutrition?.carbs    ?? ''),
+        fat:      String(source.nutrition?.fat      ?? ''),
       })
     } else {
       setTitle(''); setDescription(''); setServings('2'); setPrepTime('10'); setCookTime('20')
       setIngredients([{ name: '', quantity: '', unit: 'g' }]); setSteps(['']); setTags([])
       setNutrition({ calories: '', protein: '', carbs: '', fat: '' })
     }
-  }, [existing, open])
+  }, [existing, prefill, open])
 
   function addIngredient() {
     setIngredients(prev => [...prev, { name: '', quantity: '', unit: 'g' }])
