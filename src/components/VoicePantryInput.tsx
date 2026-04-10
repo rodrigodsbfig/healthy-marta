@@ -1,9 +1,11 @@
 import { useCallback, useRef, useState } from 'react'
-import { useAction, useMutation } from 'convex/react'
+import { useAction } from 'convex/react'
 import { Mic, MicOff, Loader2, Check, X } from 'lucide-react'
 import { api } from '../../convex/_generated/api'
 import { cn } from '@/lib/utils'
 import { useLanguage } from '@/lib/language'
+
+export interface VoiceItem { name: string; quantity: number; unit: string }
 
 type Phase = 'idle' | 'listening' | 'processing' | 'preview'
 
@@ -27,10 +29,14 @@ interface ParsedItem {
   selected: boolean
 }
 
-export function VoicePantryInput() {
+interface Props {
+  onAdd: (items: VoiceItem[]) => Promise<void>
+  idleLabel?: { title: string; subtitle: string }
+}
+
+export function VoicePantryInput({ onAdd, idleLabel }: Props) {
   const { t, lang } = useLanguage()
   const parseTranscript = useAction(api.functions.aiAssist.parseTranscript)
-  const addItem = useMutation(api.functions.pantry.addItem)
 
   const [phase, setPhase]     = useState<Phase>('idle')
   const [interim, setInterim] = useState('')   // live preview of what's being heard
@@ -147,9 +153,7 @@ export function VoicePantryInput() {
     if (toAdd.length === 0) { cancel(); return }
     setSaving(true)
     try {
-      for (const i of toAdd) {
-        await addItem({ name: i.name, quantity: i.quantity, unit: i.unit })
-      }
+      await onAdd(toAdd.map(({ name, quantity, unit }) => ({ name, quantity, unit })))
       cancel()
     } finally {
       setSaving(false)
@@ -181,10 +185,10 @@ export function VoicePantryInput() {
           </div>
           <div className="text-left">
             <p className="text-sm font-semibold text-[#2D1F3D]">
-              {lang === 'pt' ? 'Gravar voz' : 'Add by voice'}
+              {idleLabel?.title ?? (lang === 'pt' ? 'Gravar voz' : 'Add by voice')}
             </p>
             <p className="text-[11px] text-[#7A6775]">
-              {lang === 'pt' ? 'Diz o que tens e o Claude extrai os itens' : 'Say what you have and Claude extracts the items'}
+              {idleLabel?.subtitle ?? (lang === 'pt' ? 'Diz o que tens e o Claude extrai os itens' : 'Say what you have and Claude extracts the items')}
             </p>
           </div>
         </button>

@@ -5,7 +5,7 @@ import { api } from '../../convex/_generated/api'
 import { cn } from '@/lib/utils'
 import { useLanguage } from '@/lib/language'
 import { getWeekStart, formatShort, weekDays } from '@/lib/dates'
-import { VoicePantryInput } from '@/components/VoicePantryInput'
+import { VoicePantryInput, type VoiceItem } from '@/components/VoicePantryInput'
 
 type View = 'list' | 'pantry'
 
@@ -256,6 +256,21 @@ export function ShoppingList() {
             </div>
           )}
 
+          {/* Voice add to list */}
+          {!addingItem && (
+            <VoicePantryInput
+              onAdd={async (voiceItems: VoiceItem[]) => {
+                for (const item of voiceItems) {
+                  await addManualItem({ weekStart, name: item.name, quantity: item.quantity, unit: item.unit })
+                }
+              }}
+              idleLabel={{
+                title:    lang === 'pt' ? 'Gravar voz' : 'Add by voice',
+                subtitle: lang === 'pt' ? 'Diz o que precisas e o Claude adiciona à lista' : 'Say what you need and Claude adds it to the list',
+              }}
+            />
+          )}
+
           {/* Add manual item */}
           <div className="flex justify-center">
             {!addingItem ? (
@@ -299,7 +314,15 @@ export function ShoppingList() {
       {view === 'pantry' && (
         <>
           {/* Voice input — always visible unless add form is open */}
-          {!addingPantry && <VoicePantryInput />}
+          {!addingPantry && (
+            <VoicePantryInput
+              onAdd={async (voiceItems: VoiceItem[]) => {
+                for (const item of voiceItems) {
+                  await addPantryItem({ name: item.name, quantity: item.quantity, unit: item.unit })
+                }
+              }}
+            />
+          )}
 
           {/* Add pantry item form */}
           {addingPantry && (
