@@ -208,8 +208,8 @@ const en = {
   voice_listening:   'Listening… speak clearly',
   voice_done:        'Done',
   voice_processing:  'Extracting items…',
-  voice_found:       'items found',
-  voice_add_items:   'Add to pantry',
+  voice_found:       '{n} items found',
+  voice_add_items:   'Add {n} item(s)',
   voice_try_again:   'Nothing found — try again',
   voice_error:       'Microphone error — try again',
 
@@ -384,8 +384,8 @@ const pt: typeof en = {
   voice_listening:   'A ouvir… fala claramente',
   voice_done:        'Pronto',
   voice_processing:  'A extrair itens…',
-  voice_found:       'itens encontrados',
-  voice_add_items:   'Adicionar à despensa',
+  voice_found:       '{n} itens encontrados',
+  voice_add_items:   'Adicionar {n} item(ns)',
   voice_try_again:   'Nada encontrado — tenta de novo',
   voice_error:       'Erro no microfone — tenta de novo',
 

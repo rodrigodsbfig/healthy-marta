@@ -165,8 +165,14 @@ export function LogMealModal({ open, onClose, date, prefillRecipeId }: LogMealMo
                 </div>
                 <p className="text-sm font-semibold text-[#2D1F3D] mb-1">{t('no_recent_meals')}</p>
                 <p className="text-[12px] text-[#7A6775]">
-                  {t('from_recipe')} →
+                  {lang === 'pt' ? 'Regista uma refeição para a veres aqui.' : 'Log a meal to see it here.'}
                 </p>
+                <button
+                  onClick={() => setTab('recipe')}
+                  className="mt-3 text-[12px] font-semibold text-[#7B5EA7] hover:underline"
+                >
+                  {lang === 'pt' ? 'Escolher de uma receita →' : 'Pick from a recipe →'}
+                </button>
               </div>
             )}
             {(recent ?? []).map((entry, i) => (
@@ -288,15 +294,15 @@ export function LogMealModal({ open, onClose, date, prefillRecipeId }: LogMealMo
                 }
               </button>
             </div>
-            <div className="grid grid-cols-4 gap-2">
+            <div className="grid grid-cols-2 gap-3">
               {[
-                { label: 'kcal', value: manualCal,     set: setManualCal     },
-                { label: 'P (g)', value: manualProtein, set: setManualProtein },
-                { label: 'C (g)', value: manualCarbs,   set: setManualCarbs   },
-                { label: 'F (g)', value: manualFat,     set: setManualFat     },
-              ].map(({ label, value, set }) => (
+                { label: lang === 'pt' ? 'Calorias (kcal)' : 'Calories (kcal)', value: manualCal,     set: setManualCal,     highlight: true },
+                { label: lang === 'pt' ? 'Proteína (g)'    : 'Protein (g)',     value: manualProtein, set: setManualProtein, highlight: false },
+                { label: lang === 'pt' ? 'Hidratos (g)'    : 'Carbs (g)',       value: manualCarbs,   set: setManualCarbs,   highlight: false },
+                { label: lang === 'pt' ? 'Gordura (g)'     : 'Fat (g)',         value: manualFat,     set: setManualFat,     highlight: false },
+              ].map(({ label, value, set, highlight }) => (
                 <div key={label}>
-                  <p className="text-[11px] text-[#7A6775] mb-1">{label}</p>
+                  <p className={`text-[11px] font-semibold mb-1 ${highlight ? 'text-[#7B5EA7]' : 'text-[#7A6775]'}`}>{label}</p>
                   <input
                     type="number" min="0"
                     className={inputCls}

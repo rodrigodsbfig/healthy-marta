@@ -298,6 +298,9 @@ export function ShoppingList() {
       {/* ── PANTRY VIEW ── */}
       {view === 'pantry' && (
         <>
+          {/* Voice input — always visible unless add form is open */}
+          {!addingPantry && <VoicePantryInput />}
+
           {/* Add pantry item form */}
           {addingPantry && (
             <div className="bg-white rounded-2xl p-5 shadow-[0_4px_20px_0_#7B5EA714] space-y-3">
@@ -321,11 +324,6 @@ export function ShoppingList() {
                 {t('add')}
               </button>
             </div>
-          )}
-
-          {/* Voice input */}
-          {!addingPantry && (
-            <VoicePantryInput />
           )}
 
           {/* Empty pantry */}

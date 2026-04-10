@@ -180,14 +180,24 @@ export function VoicePantryInput() {
   // ── Idle ──────────────────────────────────────────────────────────────────
   if (phase === 'idle') {
     return (
-      <div className="flex flex-col items-center gap-2">
+      <div className="space-y-1">
         <button
           onClick={startListening}
-          className="flex items-center gap-2 bg-[#F5EDE0] text-[#7B5EA7] font-semibold text-sm px-5 py-2.5 rounded-full hover:bg-[#EEE0FF] transition-colors"
+          className="w-full flex items-center gap-3 px-4 py-3 rounded-xl border border-dashed border-[#C4B0E0] text-[#7B5EA7] hover:bg-[#EEE0FF] transition-colors group"
         >
-          <Mic size={15} /> {lang === 'pt' ? 'Gravar voz' : 'Voice input'}
+          <div className="w-8 h-8 bg-[#EEE0FF] rounded-lg flex items-center justify-center shrink-0 group-hover:bg-[#D8C8F0] transition-colors">
+            <Mic size={15} className="text-[#7B5EA7]" />
+          </div>
+          <div className="text-left">
+            <p className="text-sm font-semibold text-[#2D1F3D]">
+              {lang === 'pt' ? 'Gravar voz' : 'Add by voice'}
+            </p>
+            <p className="text-[11px] text-[#7A6775]">
+              {lang === 'pt' ? 'Diz o que tens e o Claude extrai os itens' : 'Say what you have and Claude extracts the items'}
+            </p>
+          </div>
         </button>
-        {errorMsg && <p className="text-[12px] text-red-400 text-center max-w-xs">{errorMsg}</p>}
+        {errorMsg && <p className="text-[12px] text-red-400 px-1">{errorMsg}</p>}
       </div>
     )
   }
