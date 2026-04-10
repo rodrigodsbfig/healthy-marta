@@ -39,7 +39,8 @@ export function VoicePantryInput() {
   const [errorMsg, setErrorMsg] = useState('')
 
   const isListeningRef  = useRef(false)
-  const accumulatedRef  = useRef('')   // full transcript across all recognition sessions
+  const transcriptRef   = useRef('')   // always holds the latest full transcript (interim included)
+  const sessionBaseRef  = useRef('')   // text accumulated before the current session started
   const recRef          = useRef<SpeechRecognitionInstance | null>(null)
 
   const getSpeechAPI = useCallback((): SpeechRecognitionCtor | null => {
@@ -53,33 +54,27 @@ export function VoicePantryInput() {
 
     const rec = new API()
     rec.lang = lang === 'pt' ? 'pt-PT' : 'en-US'
-    rec.continuous     = false   // more reliable; we restart manually on end
+    rec.continuous     = false
     rec.interimResults = true
     recRef.current = rec
 
-    let sessionFinal = ''
+    // Snapshot what was accumulated before this session so we can prepend it
+    const base = sessionBaseRef.current
 
     rec.onresult = (e: SpeechRecognitionEvent) => {
-      let finalPart = ''
-      let interimPart = ''
+      let sessionText = ''
       for (let i = 0; i < e.results.length; i++) {
-        if (e.results[i].isFinal) {
-          finalPart += e.results[i][0].transcript + ' '
-        } else {
-          interimPart += e.results[i][0].transcript
-        }
+        sessionText += e.results[i][0].transcript + ' '
       }
-      sessionFinal = finalPart
-      // Show live preview: everything accumulated so far + current session + interim
-      setInterim((accumulatedRef.current + finalPart + interimPart).trim())
+      // Save immediately — available even if abort() is called right after
+      const full = (base + ' ' + sessionText).trim()
+      transcriptRef.current = full
+      setInterim(full)
     }
 
     rec.onend = () => {
-      // Commit this session's final text into accumulator
-      accumulatedRef.current = (accumulatedRef.current + sessionFinal).trim()
-      if (accumulatedRef.current) {
-        setInterim(accumulatedRef.current)
-      }
+      // Persist this session's contribution for the next session's base
+      sessionBaseRef.current = transcriptRef.current
       // Restart with a fresh instance while still listening
       if (isListeningRef.current) {
         setTimeout(() => {
@@ -94,14 +89,10 @@ export function VoicePantryInput() {
         setPhase('idle')
         setErrorMsg(t('voice_error'))
       }
-      // 'no-speech' and 'aborted' are fine — onend will restart
+      // 'no-speech' and 'aborted' — onend handles restart
     }
 
-    try {
-      rec.start()
-    } catch {
-      // ignore start errors; onend will retry
-    }
+    try { rec.start() } catch { /* onend will retry */ }
   }
 
   function startListening() {
@@ -110,7 +101,8 @@ export function VoicePantryInput() {
       return
     }
     setErrorMsg('')
-    accumulatedRef.current = ''
+    transcriptRef.current = ''
+    sessionBaseRef.current = ''
     setInterim('')
     isListeningRef.current = true
     setPhase('listening')
@@ -122,10 +114,8 @@ export function VoicePantryInput() {
     recRef.current?.abort()
     recRef.current = null
 
-    // Give onend a moment to commit its last session transcript
-    await new Promise(r => setTimeout(r, 150))
-
-    const transcript = accumulatedRef.current.trim()
+    // transcriptRef is updated synchronously during onresult — no need to wait
+    const transcript = transcriptRef.current.trim()
     if (!transcript) {
       setPhase('idle')
       setErrorMsg(lang === 'pt' ? 'Não captei nada. Tenta outra vez.' : 'Nothing captured. Please try again.')
@@ -170,7 +160,8 @@ export function VoicePantryInput() {
     isListeningRef.current = false
     recRef.current?.abort()
     recRef.current = null
-    accumulatedRef.current = ''
+    transcriptRef.current = ''
+    sessionBaseRef.current = ''
     setPhase('idle')
     setItems([])
     setInterim('')
