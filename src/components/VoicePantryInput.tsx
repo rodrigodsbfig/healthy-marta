@@ -117,10 +117,22 @@ export function VoicePantryInput({ onAdd, idleLabel }: Props) {
 
   async function stopAndProcess() {
     isListeningRef.current = false
-    recRef.current?.abort()
-    recRef.current = null
 
-    // transcriptRef is updated synchronously during onresult — no need to wait
+    // Use stop() not abort() — stop() flushes remaining audio and fires a
+    // final onresult before onend, giving us the last words the user said.
+    // We wait for onend to confirm all audio is processed before reading.
+    if (recRef.current) {
+      await new Promise<void>(resolve => {
+        const rec = recRef.current!
+        rec.onend = () => {
+          sessionBaseRef.current = transcriptRef.current
+          resolve()
+        }
+        try { rec.stop() } catch { resolve() }
+      })
+      recRef.current = null
+    }
+
     const transcript = transcriptRef.current.trim()
     if (!transcript) {
       setPhase('idle')
