@@ -7,6 +7,18 @@ import { useLanguage } from '@/lib/language'
 
 type Phase = 'idle' | 'listening' | 'processing' | 'preview'
 
+interface SpeechRecognitionInstance {
+  lang: string
+  continuous: boolean
+  interimResults: boolean
+  start(): void
+  stop(): void
+  onresult: ((e: SpeechRecognitionEvent) => void) | null
+  onend: (() => void) | null
+  onerror: ((e: SpeechRecognitionErrorEvent) => void) | null
+}
+type SpeechRecognitionCtor = new () => SpeechRecognitionInstance
+
 interface ParsedItem {
   name: string
   quantity: number
@@ -28,16 +40,15 @@ export function VoicePantryInput({ onAdded }: Props) {
   const [saving, setSaving] = useState(false)
   const [errorMsg, setErrorMsg] = useState('')
 
-  const recognitionRef = useRef<SpeechRecognition | null>(null)
+  const recognitionRef = useRef<SpeechRecognitionInstance | null>(null)
   const transcriptRef   = useRef('')
   const isListeningRef  = useRef(false)
 
   function startListening() {
-    const SpeechRecognition =
-      (window as Window & { SpeechRecognition?: typeof window.SpeechRecognition; webkitSpeechRecognition?: typeof window.SpeechRecognition }).SpeechRecognition ??
-      (window as Window & { SpeechRecognition?: typeof window.SpeechRecognition; webkitSpeechRecognition?: typeof window.SpeechRecognition }).webkitSpeechRecognition
+    const w = window as Window & { SpeechRecognition?: SpeechRecognitionCtor; webkitSpeechRecognition?: SpeechRecognitionCtor }
+    const SpeechRecognitionAPI = w.SpeechRecognition ?? w.webkitSpeechRecognition
 
-    if (!SpeechRecognition) {
+    if (!SpeechRecognitionAPI) {
       setErrorMsg(t('voice_error'))
       return
     }
@@ -47,7 +58,7 @@ export function VoicePantryInput({ onAdded }: Props) {
     setPhase('listening')
     isListeningRef.current = true
 
-    const rec = new SpeechRecognition()
+    const rec = new SpeechRecognitionAPI()
     rec.lang = lang === 'pt' ? 'pt-PT' : 'en-GB'
     rec.continuous      = true
     rec.interimResults  = true
