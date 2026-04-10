@@ -5,6 +5,7 @@ import { api } from '../../convex/_generated/api'
 import { cn } from '@/lib/utils'
 import { useLanguage } from '@/lib/language'
 import { getWeekStart, formatShort, weekDays } from '@/lib/dates'
+import { VoicePantryInput } from '@/components/VoicePantryInput'
 
 type View = 'list' | 'pantry'
 
@@ -322,9 +323,14 @@ export function ShoppingList() {
             </div>
           )}
 
+          {/* Voice input */}
+          {!addingPantry && (
+            <VoicePantryInput />
+          )}
+
           {/* Empty pantry */}
           {pantryItems !== undefined && pantryItems.length === 0 && !addingPantry && (
-            <div className="py-20 text-center">
+            <div className="py-12 text-center">
               <div className="w-16 h-16 bg-[#EEE0FF] rounded-2xl flex items-center justify-center mx-auto mb-4">
                 <Package size={28} className="text-[#7B5EA7]" />
               </div>

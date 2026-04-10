@@ -204,6 +204,15 @@ const en = {
   auth_coming:       'Auth coming in Phase 2.',
   language_label:    'Language',
 
+  // Voice pantry
+  voice_listening:   'Listening… speak clearly',
+  voice_done:        'Done',
+  voice_processing:  'Extracting items…',
+  voice_found:       'items found',
+  voice_add_items:   'Add to pantry',
+  voice_try_again:   'Nothing found — try again',
+  voice_error:       'Microphone error — try again',
+
   // Pantry
   to_buy:            'To Buy',
   in_pantry:         'Pantry',
@@ -370,6 +379,15 @@ const pt: typeof en = {
   profile:           'Perfil',
   auth_coming:       'Autenticação na Fase 2.',
   language_label:    'Idioma',
+
+  // Voice pantry
+  voice_listening:   'A ouvir… fala claramente',
+  voice_done:        'Pronto',
+  voice_processing:  'A extrair itens…',
+  voice_found:       'itens encontrados',
+  voice_add_items:   'Adicionar à despensa',
+  voice_try_again:   'Nada encontrado — tenta de novo',
+  voice_error:       'Erro no microfone — tenta de novo',
 
   // Pantry
   to_buy:            'Para Comprar',

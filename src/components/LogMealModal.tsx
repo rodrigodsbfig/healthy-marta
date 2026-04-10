@@ -1,6 +1,6 @@
 import { useState } from 'react'
-import { useQuery, useMutation } from 'convex/react'
-import { X, Search, ChefHat, Check, Clock } from 'lucide-react'
+import { useQuery, useMutation, useAction } from 'convex/react'
+import { X, Search, ChefHat, Check, Clock, Sparkles, Loader2 } from 'lucide-react'
 import { api } from '../../convex/_generated/api'
 import type { Id } from '../../convex/_generated/dataModel'
 import { cn } from '@/lib/utils'
@@ -16,10 +16,11 @@ interface LogMealModalProps {
 }
 
 export function LogMealModal({ open, onClose, date, prefillRecipeId }: LogMealModalProps) {
-  const { t } = useLanguage()
+  const { t, lang } = useLanguage()
   const recipes    = useQuery(api.functions.recipes.list)
   const recent     = useQuery(api.functions.nutritionLogs.getRecentEntries, { days: 7 })
   const logMeal    = useMutation(api.functions.nutritionLogs.logMeal)
+  const estimateMacros = useAction(api.functions.aiAssist.estimateMacros)
 
   const [tab, setTab]               = useState<Tab>(prefillRecipeId ? 'recipe' : 'recent')
   const [search, setSearch]         = useState('')
@@ -32,6 +33,7 @@ export function LogMealModal({ open, onClose, date, prefillRecipeId }: LogMealMo
   const [manualProtein, setManualProtein] = useState('')
   const [manualCarbs,   setManualCarbs]   = useState('')
   const [manualFat,     setManualFat]     = useState('')
+  const [estimating,    setEstimating]    = useState(false)
 
   const filtered = (recipes ?? []).filter(r =>
     r.title.toLowerCase().includes(search.toLowerCase())
@@ -68,6 +70,20 @@ export function LogMealModal({ open, onClose, date, prefillRecipeId }: LogMealMo
       })
       handleClose()
     } finally { setSaving(false) }
+  }
+
+  async function handleEstimate() {
+    if (!manualLabel.trim()) return
+    setEstimating(true)
+    try {
+      const result = await estimateMacros({ label: manualLabel.trim(), servings: 1, language: lang })
+      setManualCal(String(result.calories))
+      setManualProtein(String(result.protein))
+      setManualCarbs(String(result.carbs))
+      setManualFat(String(result.fat))
+    } finally {
+      setEstimating(false)
+    }
   }
 
   async function handleLogManual() {
@@ -254,12 +270,24 @@ export function LogMealModal({ open, onClose, date, prefillRecipeId }: LogMealMo
         {/* ── MANUAL TAB ── */}
         {tab === 'manual' && (
           <div className="px-6 py-4 space-y-3 flex-1">
-            <input
-              className={inputCls}
-              placeholder="e.g. Greek yoghurt with granola"
-              value={manualLabel}
-              onChange={e => setManualLabel(e.target.value)}
-            />
+            <div className="space-y-2">
+              <input
+                className={inputCls}
+                placeholder={lang === 'pt' ? 'ex. Iogurte grego com granola' : 'e.g. Greek yoghurt with granola'}
+                value={manualLabel}
+                onChange={e => setManualLabel(e.target.value)}
+              />
+              <button
+                onClick={handleEstimate}
+                disabled={!manualLabel.trim() || estimating}
+                className="w-full flex items-center justify-center gap-2 border border-[#7B5EA7]/30 text-[#7B5EA7] text-[12px] font-semibold py-2 rounded-xl hover:bg-[#EEE0FF] transition-colors disabled:opacity-40"
+              >
+                {estimating
+                  ? <><Loader2 size={13} className="animate-spin" /> {lang === 'pt' ? 'A estimar...' : 'Estimating...'}</>
+                  : <><Sparkles size={13} /> {lang === 'pt' ? 'Estimar macros com IA' : 'Estimate macros with AI'}</>
+                }
+              </button>
+            </div>
             <div className="grid grid-cols-4 gap-2">
               {[
                 { label: 'kcal', value: manualCal,     set: setManualCal     },
