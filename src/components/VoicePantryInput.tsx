@@ -1,4 +1,4 @@
-import { useCallback, useRef, useState } from 'react'
+import { useRef, useState } from 'react'
 import { useAction } from 'convex/react'
 import { Mic, MicOff, Loader2, Check, X } from 'lucide-react'
 import { api } from '../../convex/_generated/api'
@@ -6,8 +6,6 @@ import { cn } from '@/lib/utils'
 import { useLanguage } from '@/lib/language'
 
 export interface VoiceItem { name: string; quantity: number; unit: string }
-
-type Phase = 'idle' | 'listening' | 'processing' | 'preview'
 
 interface SpeechRecognitionInstance {
   lang: string
@@ -22,71 +20,59 @@ interface SpeechRecognitionInstance {
 }
 type SpeechRecognitionCtor = new () => SpeechRecognitionInstance
 
-interface ParsedItem {
-  name: string
-  quantity: number
-  unit: string
-  selected: boolean
-}
-
 interface Props {
   onAdd: (items: VoiceItem[]) => Promise<void>
   idleLabel?: { title: string; subtitle: string }
 }
 
+type Phase = 'idle' | 'listening' | 'processing' | 'preview'
+
+interface ParsedItem extends VoiceItem { selected: boolean }
+
 export function VoicePantryInput({ onAdd, idleLabel }: Props) {
   const { t, lang } = useLanguage()
   const parseTranscript = useAction(api.functions.aiAssist.parseTranscript)
 
-  const [phase, setPhase]     = useState<Phase>('idle')
-  const [interim, setInterim] = useState('')   // live preview of what's being heard
-  const [items, setItems]     = useState<ParsedItem[]>([])
-  const [saving, setSaving]   = useState(false)
+  const [phase, setPhase]       = useState<Phase>('idle')
+  const [interim, setInterim]   = useState('')
+  const [items, setItems]       = useState<ParsedItem[]>([])
+  const [saving, setSaving]     = useState(false)
   const [errorMsg, setErrorMsg] = useState('')
 
-  const isListeningRef  = useRef(false)
-  const transcriptRef   = useRef('')   // always holds the latest full transcript (interim included)
-  const sessionBaseRef  = useRef('')   // text accumulated before the current session started
-  const recRef          = useRef<SpeechRecognitionInstance | null>(null)
+  // Refs — survive re-renders without causing them
+  const isListeningRef = useRef(false)
+  const recRef         = useRef<SpeechRecognitionInstance | null>(null)
+  const committedRef   = useRef('')  // text from completed sessions
+  const transcriptRef  = useRef('')  // always has the latest full text
 
-  const getSpeechAPI = useCallback((): SpeechRecognitionCtor | null => {
-    const w = window as Window & { SpeechRecognition?: SpeechRecognitionCtor; webkitSpeechRecognition?: SpeechRecognitionCtor }
+  function getSpeechAPI(): SpeechRecognitionCtor | null {
+    const w = window as Window & {
+      SpeechRecognition?: SpeechRecognitionCtor
+      webkitSpeechRecognition?: SpeechRecognitionCtor
+    }
     return w.SpeechRecognition ?? w.webkitSpeechRecognition ?? null
-  }, [])
+  }
 
-  function createAndStart() {
+  function launch() {
     const API = getSpeechAPI()
-    if (!API) return
+    if (!API || !isListeningRef.current) return
 
     const rec = new API()
-    rec.lang = lang === 'pt' ? 'pt-PT' : 'en-US'
-    rec.continuous     = false
+    rec.lang           = lang === 'pt' ? 'pt-PT' : 'en-US'
+    rec.continuous     = true   // stay open — don't time out on silence
     rec.interimResults = true
     recRef.current = rec
 
-    // Snapshot what was accumulated before this session so we can prepend it
-    const base = sessionBaseRef.current
+    const sessionBase = committedRef.current
 
     rec.onresult = (e: SpeechRecognitionEvent) => {
       let sessionText = ''
       for (let i = 0; i < e.results.length; i++) {
         sessionText += e.results[i][0].transcript + ' '
       }
-      // Save immediately — available even if abort() is called right after
-      const full = (base + ' ' + sessionText).trim()
+      const full = (sessionBase + ' ' + sessionText).trim()
       transcriptRef.current = full
       setInterim(full)
-    }
-
-    rec.onend = () => {
-      // Persist this session's contribution for the next session's base
-      sessionBaseRef.current = transcriptRef.current
-      // Restart with a fresh instance while still listening
-      if (isListeningRef.current) {
-        setTimeout(() => {
-          if (isListeningRef.current) createAndStart()
-        }, 100)
-      }
     }
 
     rec.onerror = (e: SpeechRecognitionErrorEvent) => {
@@ -95,39 +81,46 @@ export function VoicePantryInput({ onAdd, idleLabel }: Props) {
         setPhase('idle')
         setErrorMsg(t('voice_error'))
       }
-      // 'no-speech' and 'aborted' — onend handles restart
+      // no-speech / network / audio-capture → let onend restart
     }
 
-    try { rec.start() } catch { /* onend will retry */ }
+    rec.onend = () => {
+      // Commit whatever we captured so the next session can build on it
+      committedRef.current = transcriptRef.current
+      // Restart immediately if still in listening mode
+      // (some browsers end continuous sessions early — this keeps us alive)
+      if (isListeningRef.current) {
+        setTimeout(launch, 200)
+      }
+    }
+
+    try { rec.start() } catch { setTimeout(launch, 500) }
   }
 
   function startListening() {
-    if (!getSpeechAPI()) {
-      setErrorMsg(t('voice_error'))
-      return
-    }
+    if (!getSpeechAPI()) { setErrorMsg(t('voice_error')); return }
     setErrorMsg('')
     transcriptRef.current = ''
-    sessionBaseRef.current = ''
+    committedRef.current = ''
     setInterim('')
     isListeningRef.current = true
     setPhase('listening')
-    createAndStart()
+    launch()
   }
 
   async function stopAndProcess() {
     isListeningRef.current = false
 
-    // Use stop() not abort() — stop() flushes remaining audio and fires a
-    // final onresult before onend, giving us the last words the user said.
-    // We wait for onend to confirm all audio is processed before reading.
+    // stop() (not abort()) flushes remaining audio → fires onresult → fires onend
     if (recRef.current) {
       await new Promise<void>(resolve => {
         const rec = recRef.current!
         rec.onend = () => {
-          sessionBaseRef.current = transcriptRef.current
+          committedRef.current = transcriptRef.current
           resolve()
         }
+        // Safety timeout: if onend never fires, proceed anyway
+        setTimeout(resolve, 1500)
         try { rec.stop() } catch { resolve() }
       })
       recRef.current = null
@@ -136,7 +129,7 @@ export function VoicePantryInput({ onAdd, idleLabel }: Props) {
     const transcript = transcriptRef.current.trim()
     if (!transcript) {
       setPhase('idle')
-      setErrorMsg(lang === 'pt' ? 'Não captei nada. Tenta outra vez.' : 'Nothing captured. Please try again.')
+      setErrorMsg(lang === 'pt' ? 'Não captei nada. Fala mais alto e tenta de novo.' : 'Nothing captured. Speak louder and try again.')
       return
     }
 
@@ -167,17 +160,15 @@ export function VoicePantryInput({ onAdd, idleLabel }: Props) {
     try {
       await onAdd(toAdd.map(({ name, quantity, unit }) => ({ name, quantity, unit })))
       cancel()
-    } finally {
-      setSaving(false)
-    }
+    } finally { setSaving(false) }
   }
 
   function cancel() {
     isListeningRef.current = false
-    recRef.current?.abort()
+    try { recRef.current?.abort() } catch {}
     recRef.current = null
     transcriptRef.current = ''
-    sessionBaseRef.current = ''
+    committedRef.current = ''
     setPhase('idle')
     setItems([])
     setInterim('')
@@ -221,7 +212,9 @@ export function VoicePantryInput({ onAdd, idleLabel }: Props) {
             </span>
             <span className="text-sm font-semibold text-[#2D1F3D]">{t('voice_listening')}</span>
           </div>
-          <button onClick={cancel} className="text-[#7A6775] hover:text-[#2D1F3D]"><X size={16} /></button>
+          <button onClick={cancel} className="text-[#7A6775] hover:text-[#2D1F3D]">
+            <X size={16} />
+          </button>
         </div>
 
         <p className="text-[12px] text-[#7A6775]">
@@ -230,10 +223,14 @@ export function VoicePantryInput({ onAdd, idleLabel }: Props) {
             : 'E.g. "200g chicken, 1 litre milk, 3 eggs"'}
         </p>
 
-        {/* Live transcript preview */}
-        {interim && (
+        {/* Live transcript — appears as soon as the first word is heard */}
+        {interim ? (
           <div className="bg-[#FDF8F2] border border-[#E8D9C8] rounded-xl px-3 py-2.5 text-sm text-[#2D1F3D] min-h-[40px]">
             {interim}
+          </div>
+        ) : (
+          <div className="bg-[#FDF8F2] border border-dashed border-[#E8D9C8] rounded-xl px-3 py-2.5 text-sm text-[#7A6775] min-h-[40px]">
+            {lang === 'pt' ? 'Aguardando fala…' : 'Waiting for speech…'}
           </div>
         )}
 
