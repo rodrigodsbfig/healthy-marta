@@ -1,15 +1,45 @@
 import { query, mutation } from '../_generated/server'
 import { v } from 'convex/values'
+import { equivalentOption, amountFor, type MealMoment } from '../lib/plan'
 
-// Simple keyword-based categorisation
+/**
+ * Supermarket aisle for an ingredient.
+ *
+ * Portuguese first, because every recipe in the library is written in
+ * Portuguese — an English-only matcher put the entire list under "Other".
+ * English terms are kept so hand-typed items still land somewhere sensible.
+ */
 function categorise(name: string): string {
   const n = name.toLowerCase()
-  if (/chicken|beef|salmon|tuna|shrimp|pork|lamb|turkey|egg/.test(n)) return 'Protein'
-  if (/milk|cheese|yogurt|butter|cream|feta|mozzarella/.test(n)) return 'Dairy & Eggs'
-  if (/tomato|lettuce|spinach|kale|pepper|onion|garlic|broccoli|asparagus|carrot|cucumber|zucchini|mushroom|avocado|lemon|lime|berry|berries|apple|banana|mango|fruit|vegetable/.test(n)) return 'Produce'
-  if (/rice|pasta|quinoa|oat|bread|flour|lentil|bean|chickpea|noodle/.test(n)) return 'Grains & Legumes'
-  if (/oil|salt|pepper|spice|herb|sauce|vinegar|sugar|honey|soy|mustard|mayo|ketchup/.test(n)) return 'Pantry'
-  return 'Other'
+  if (/salm[ãa]o|pescada|dourada|atum|bacalhau|peixe|marisco|camar[ãa]o|fish|salmon|tuna/.test(n)) return 'Peixe'
+  if (/frango|peru|vaca|bife|porco|carne|presunto|fiambre|chicken|beef|turkey|pork/.test(n)) return 'Carne'
+  if (/ovo|clara|queijo|iogurte|babybel|vaca que ri|philadelphia|requeij[ãa]o|manteiga|leite|natas|egg|cheese|yogurt/.test(n)) return 'Frescos'
+  if (/legume|salada|br[óo]colo|couve|cenoura|tomate|alface|pepino|courgette|curgete|pimento|ab[óo]bora|espinafre|cebola|alho|feij[ãa]o verde|fruta|banana|ma[çc][ãa]|laranja|lim[ãa]o|morango|frutos vermelhos|abacate|vegetable|fruit/.test(n)) return 'Frutas e Legumes'
+  if (/p[ãa]o|tosta|marinheira|tortilha|tortita|bread|toast/.test(n)) return 'Padaria'
+  if (/arroz|massa|quinoa|bulgur|amaranto|trigo|aveia|granola|cereai|tapioca|polvilho|batata|inhame|lentilha|gr[ãa]o|tremo[çc]o|rice|pasta|oat/.test(n)) return 'Mercearia'
+  if (/azeite|[óo]leo|vinagre|molho|sal|pimenta|especiaria|canela|or[ée]g[ãa]os|salsa|tomilho|alecrim|louro|gengibre|soja|chocolate|frutos secos|semente|noz|amendoim|caf[ée]|ch[áa]|bebida vegetal|sopa|gelado|pudim|oil|sauce|spice/.test(n)) return 'Mercearia'
+  return 'Outros'
+}
+
+/**
+ * Seasonings measured to taste carry no useful quantity. Summing them across
+ * a week produces nonsense like "7 q.b. sal e pimenta", so they are listed
+ * once without a number.
+ */
+const UNQUANTIFIABLE_UNITS = new Set(['q.b.', 'pitada', 'pitadas'])
+
+/** Things the plan counts as food but nobody puts in a shopping basket. */
+const NOT_SHOPPING = /^(água|agua|water)$/i
+
+/**
+ * Singular/plural units describe the same thing. Recipes naturally write
+ * "1 dente" and "2 dentes" of garlic, which would otherwise split one
+ * ingredient into two lines on the list.
+ */
+function normaliseUnit(unit: string): string {
+  const u = unit.trim().toLowerCase()
+  if (u === 'g' || u === 'ml' || u === 'kg' || u === 'l') return u
+  return u.replace(/s$/, '')
 }
 
 export const getByWeek = query({
@@ -25,34 +55,66 @@ export const getByWeek = query({
 export const generateFromPlan = mutation({
   args: { weekStart: v.string() },
   handler: async (ctx, { weekStart }) => {
-    // Get the meal plan for this week
     const plan = await ctx.db
       .query('mealPlans')
       .filter(q => q.eq(q.field('weekStart'), weekStart))
       .first()
 
     // Accumulate ingredients: key = "name||unit"
-    const merged: Record<string, { name: string; quantity: number; unit: string }> = {}
+    const merged: Record<string, { name: string; quantity: number; unit: string; toTaste: boolean }> = {}
+
+    function add(name: string, quantity: number, unit: string) {
+      if (NOT_SHOPPING.test(name.trim())) return
+      const toTaste = UNQUANTIFIABLE_UNITS.has(unit)
+      const key = `${name.toLowerCase()}||${normaliseUnit(unit)}`
+      if (merged[key]) {
+        if (!toTaste) merged[key].quantity += quantity
+      } else {
+        merged[key] = { name, quantity, unit, toTaste }
+      }
+    }
 
     if (plan) {
       for (const slot of plan.slots) {
         const recipe = await ctx.db.get(slot.recipeId)
         if (!recipe) continue
         const scale = slot.servings / recipe.servings
+
         for (const ing of recipe.ingredients) {
-          const key = `${ing.name.toLowerCase()}||${ing.unit}`
-          if (merged[key]) {
-            merged[key].quantity += ing.quantity * scale
-          } else {
-            merged[key] = { name: ing.name, quantity: ing.quantity * scale, unit: ing.unit }
+          // A dish stores its quantities at its primary moment. Served at
+          // another moment the plan prescribes a different portion (90g arroz
+          // at almoço, 60g at jantar), so re-resolve from the plan whenever the
+          // ingredient is linked to a plan option.
+          let quantity = ing.quantity
+          if (ing.optionId) {
+            const option = equivalentOption(ing.optionId, slot.meal as MealMoment)
+            if (option) {
+              const amt = amountFor(option, { comSopa: recipe.comSopa ?? false })
+              if (amt.grams !== undefined) quantity = amt.grams
+              else if (amt.ml !== undefined) quantity = amt.ml
+            }
           }
+          add(ing.name, quantity * scale, ing.unit)
         }
       }
     }
 
+    // Weekly staples — bought regardless of what is planned. Skip any the
+    // recipes already cover: a staple carries no unit, so "pão escuro" from
+    // the staples list would not merge with "230g pão escuro" from the week
+    // and she would see the same item twice.
+    const alreadyListed = new Set(Object.values(merged).map(i => i.name.toLowerCase()))
+    const staples = await ctx.db.query('staples').collect()
+    for (const s of staples) {
+      if (!s.active) continue
+      if (alreadyListed.has(s.name.toLowerCase())) continue
+      add(s.name, s.quantity ?? 1, s.unit ?? '')
+    }
+
     const items = Object.values(merged).map(i => ({
       name: i.name,
-      quantity: Math.round(i.quantity * 10) / 10,
+      // To-taste seasonings get 0 so the UI can show the name alone.
+      quantity: i.toTaste ? 0 : Math.round(i.quantity * 10) / 10,
       unit: i.unit,
       category: categorise(i.name),
       checked: false,

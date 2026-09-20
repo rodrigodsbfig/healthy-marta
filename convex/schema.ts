@@ -46,6 +46,11 @@ export default defineSchema({
         name: v.string(),
         quantity: v.number(),
         unit: v.string(),
+        // The plan option this ingredient fills, when it came from the plan.
+        // Lets the shopping list re-resolve the portion for the moment the
+        // dish is actually served at (90g arroz at almoço, 60g at jantar)
+        // instead of trusting the quantity stored at the primary moment.
+        optionId: v.optional(v.string()),
       })
     ),
     steps: v.array(v.string()),

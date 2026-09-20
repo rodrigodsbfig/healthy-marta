@@ -237,7 +237,7 @@ export function ShoppingList() {
                             'text-[12px] shrink-0',
                             item.checked ? 'text-[#E8D9C8]' : 'text-[#7A6775]',
                           )}>
-                            {item.quantity} {item.unit}
+                            {item.quantity > 0 ? `${item.quantity} ${item.unit}` : item.unit}
                           </span>
                           {item.manual && (
                             <button
@@ -381,7 +381,7 @@ export function ShoppingList() {
                       <li key={item!._id} className="flex items-center gap-3 group">
                         <div className="w-2 h-2 rounded-full bg-[#2D9B5C] shrink-0" />
                         <span className="flex-1 text-sm text-[#2D1F3D]">{item!.name}</span>
-                        <span className="text-[12px] text-[#7A6775] shrink-0">{item!.quantity} {item!.unit}</span>
+                        <span className="text-[12px] text-[#7A6775] shrink-0">{item!.quantity > 0 ? `${item!.quantity} ${item!.unit}` : item!.unit}</span>
                         <button
                           onClick={() => removePantryItem({ id: item!._id })}
                           className="opacity-0 group-hover:opacity-100 text-[#E8D9C8] hover:text-red-400 transition-all shrink-0"

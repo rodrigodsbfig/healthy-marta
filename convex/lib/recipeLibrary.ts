@@ -46,7 +46,7 @@ export interface SeedRecipe {
 }
 
 export interface BuiltRecipe {
-  ingredients: Array<{ name: string; quantity: number; unit: string }>
+  ingredients: Array<{ name: string; quantity: number; unit: string; optionId?: string }>
   nutrition: Macros
 }
 
@@ -61,7 +61,7 @@ export function buildRecipe(seed: SeedRecipe, moment: MealMoment): BuiltRecipe {
   let nutrition = ZERO
 
   if (comSopa && getMoment(moment).slots.some((s) => s.kind === 'sopa')) {
-    ingredients.push({ name: 'sopa sem batata', quantity: 200, unit: 'ml' })
+    ingredients.push({ name: 'sopa sem batata', quantity: 200, unit: 'ml', optionId: 'sopa' })
     nutrition = addMacros(nutrition, macrosFor('sopa', { grams: 200 }))
   }
 
@@ -73,17 +73,20 @@ export function buildRecipe(seed: SeedRecipe, moment: MealMoment): BuiltRecipe {
     const amt = amountFor(option, { comSopa })
 
     if (c.units !== undefined) {
-      ingredients.push({ name, quantity: c.units, unit: 'unidades' })
+      ingredients.push({ name, quantity: c.units, unit: 'unidades', optionId: c.optionId })
       nutrition = addMacros(nutrition, macrosFor(key, { units: c.units }))
     } else if (amt.grams !== undefined) {
-      ingredients.push({ name, quantity: amt.grams, unit: 'g' })
+      ingredients.push({ name, quantity: amt.grams, unit: 'g', optionId: c.optionId })
       nutrition = addMacros(nutrition, macrosFor(key, { grams: amt.grams }))
     } else if (amt.ml !== undefined) {
-      ingredients.push({ name, quantity: amt.ml, unit: 'ml' })
+      ingredients.push({ name, quantity: amt.ml, unit: 'ml', optionId: c.optionId })
       nutrition = addMacros(nutrition, macrosFor(key, { grams: amt.ml }))
     } else {
-      // Unit-counted option with no explicit count, e.g. "1 babybel light".
-      ingredients.push({ name: amt.amount ?? name, quantity: 1, unit: '' })
+      // Unit-counted option, e.g. "1 babybel light". The plan's phrase already
+      // contains the count, so using it as the ingredient name would render as
+      // "1 café sem açúcar × 4" once a week's worth is added up. Keep the food
+      // name and let the quantity carry the count.
+      ingredients.push({ name, quantity: 1, unit: 'unidade', optionId: c.optionId })
       nutrition = addMacros(nutrition, macrosFor(key, { units: 1 }))
     }
   }
