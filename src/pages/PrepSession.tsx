@@ -51,7 +51,7 @@ export function PrepSession() {
   return (
     <div className="max-w-5xl mx-auto space-y-6">
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
           <h1 className="font-display font-bold text-2xl text-[#2D1F3D]">{t('prep_session')}</h1>
           <p className="text-sm text-[#7A6775] mt-0.5">{weekLabel}</p>

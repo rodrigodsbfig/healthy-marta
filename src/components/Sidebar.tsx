@@ -16,7 +16,12 @@ const LANGUAGES: { value: Lang; label: string }[] = [
   { value: 'pt', label: '🇵🇹 PT' },
 ]
 
-export function Sidebar() {
+interface SidebarProps {
+  /** Called when a nav item is chosen — closes the drawer on mobile. */
+  onNavigate?: () => void
+}
+
+export function Sidebar({ onNavigate }: SidebarProps = {}) {
   const { t, lang, setLang } = useLanguage()
 
   const navItems = [
@@ -29,7 +34,7 @@ export function Sidebar() {
   ]
 
   return (
-    <aside className="w-56 shrink-0 bg-white h-screen flex flex-col border-r border-[#E8D9C8] sticky top-0">
+    <aside className="w-56 shrink-0 bg-white h-full flex flex-col border-r border-[#E8D9C8]">
       {/* Logo */}
       <div className="px-5 pt-6 pb-5">
         <div className="flex items-center gap-2.5">
@@ -54,6 +59,7 @@ export function Sidebar() {
             key={to}
             to={to}
             end={to === '/'}
+            onClick={onNavigate}
             className={({ isActive }) =>
               cn(
                 'flex items-center gap-3 px-3 py-2.5 rounded-[10px] text-sm transition-colors relative',

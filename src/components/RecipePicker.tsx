@@ -62,7 +62,7 @@ export function RecipePicker({ open, dayLabel, onClose, onPick }: RecipePickerPr
         </div>
 
         {/* Meal type */}
-        <div className="px-5 pt-4 grid grid-cols-4 gap-2">
+        <div className="px-5 pt-4 grid grid-cols-2 sm:grid-cols-4 gap-2">
           {MEAL_TYPES.map(m => (
             <button
               key={m.value}

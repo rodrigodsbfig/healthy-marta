@@ -103,7 +103,7 @@ export function Today() {
     <>
       <div className="max-w-5xl mx-auto space-y-6">
         {/* Header */}
-        <div className="flex items-center justify-between">
+        <div className="flex flex-wrap items-center justify-between gap-3">
           <div>
             <h1 className="font-display font-bold text-2xl text-[#2D1F3D]">
               {t('good_morning')}, Marta
@@ -169,9 +169,9 @@ export function Today() {
           </div>
         </div>
 
-        <div className="flex gap-6">
+        <div className="flex flex-col lg:flex-row gap-6">
           {/* Today's plan + logged meals */}
-          <div className="flex-1 space-y-3">
+          <div className="flex-1 min-w-0 space-y-3">
             <h2 className="font-display font-bold text-[16px] text-[#2D1F3D]">{t('todays_plan')}</h2>
 
             {todaySlots.length === 0 && plan !== undefined && (

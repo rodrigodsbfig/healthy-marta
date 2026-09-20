@@ -113,7 +113,7 @@ export function ShoppingList() {
   return (
     <div className="max-w-5xl mx-auto space-y-6">
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
           <h1 className="font-display font-bold text-2xl text-[#2D1F3D]">{t('shopping_list')}</h1>
           <p className="text-sm text-[#7A6775] mt-0.5">{weekLabel} · {t('from_meal_plan')}</p>
@@ -206,7 +206,7 @@ export function ShoppingList() {
 
           {/* Category groups */}
           {categories.length > 0 && (
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               {categories.map(([category, catItems]) => (
                 <div key={category} className="bg-white rounded-2xl p-5 shadow-[0_4px_20px_0_#7B5EA714]">
                   <div className="flex items-center gap-2 mb-3">
@@ -223,7 +223,7 @@ export function ShoppingList() {
                             <CheckIcon checked={item.checked} />
                           </button>
                           <span className={cn(
-                            'flex-1 text-sm transition-colors',
+                            'flex-1 min-w-0 text-sm transition-colors',
                             item.checked ? 'text-[#7A6775] line-through' : 'text-[#2D1F3D]',
                           )}>
                             {item.name}
@@ -368,7 +368,7 @@ export function ShoppingList() {
 
           {/* Pantry items by category */}
           {pantryByCategory.length > 0 && (
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               {pantryByCategory.map(([category, catItems]) => (
                 <div key={category} className="bg-white rounded-2xl p-5 shadow-[0_4px_20px_0_#7B5EA714]">
                   <div className="flex items-center gap-2 mb-3">
