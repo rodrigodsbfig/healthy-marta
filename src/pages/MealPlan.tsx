@@ -9,6 +9,7 @@ import { DAY_NAMES, DAY_SHORT, MEAL_LABELS } from '@/lib/translations'
 import { MEAL_MOMENTS, MOMENT_COLORS, type MealMoment } from '@/lib/mealMoments'
 import { getWeekStart, addWeeks, formatShort, weekDays } from '@/lib/dates'
 import { RecipePicker } from '@/components/RecipePicker'
+import { GenerateWeekButton } from '@/components/GenerateWeekButton'
 
 type MealType = MealMoment
 
@@ -56,6 +57,10 @@ export function MealPlan() {
             <p className="text-sm text-[#7A6775] mt-0.5">{weekLabel}</p>
           </div>
           <div className="flex items-center gap-2">
+            <GenerateWeekButton
+              weekStart={weekStart}
+              hasExistingPlan={(plan?.slots ?? []).length > 0}
+            />
             <button
               onClick={() => setWeekStart(w => addWeeks(w, -1))}
               className="w-9 h-9 rounded-full border border-[#E8D9C8] flex items-center justify-center text-[#7A6775] hover:bg-[#F5EDE0] transition-colors"
@@ -164,7 +169,7 @@ export function MealPlan() {
                       <div className={cn('w-2.5 h-2.5 rounded-full', colors.dot)} />
                     </div>
                     <div className="flex-1 min-w-0">
-                      <p className="text-[11px] text-[#7A6775] capitalize mb-0.5">
+                      <p className="text-[11px] text-[#7A6775] mb-0.5">
                         {MEAL_LABELS[lang][mealType]}
                       </p>
                       <p className="text-sm font-semibold text-[#2D1F3D] truncate">

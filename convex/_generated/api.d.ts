@@ -18,6 +18,7 @@ import type * as functions_prepSessions from "../functions/prepSessions.js";
 import type * as functions_recipes from "../functions/recipes.js";
 import type * as functions_shoppingLists from "../functions/shoppingLists.js";
 import type * as lib_foodMacros from "../lib/foodMacros.js";
+import type * as lib_generateWeek from "../lib/generateWeek.js";
 import type * as lib_plan from "../lib/plan.js";
 import type * as lib_recipeLibrary from "../lib/recipeLibrary.js";
 
@@ -38,6 +39,7 @@ declare const fullApi: ApiFromModules<{
   "functions/recipes": typeof functions_recipes;
   "functions/shoppingLists": typeof functions_shoppingLists;
   "lib/foodMacros": typeof lib_foodMacros;
+  "lib/generateWeek": typeof lib_generateWeek;
   "lib/plan": typeof lib_plan;
   "lib/recipeLibrary": typeof lib_recipeLibrary;
 }>;
