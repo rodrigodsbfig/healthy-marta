@@ -122,6 +122,11 @@ export default defineSchema({
     ),
   }).index('by_user', ['userId']),
 
+  /**
+   * The foods Marta keeps. One list replaces the old pantry/staples split:
+   * `inStock` means she has it now (so the shopping list can grey it out),
+   * `alwaysBuy` means it goes on every generated list regardless.
+   */
   pantryItems: defineTable({
     userId: v.optional(v.id('users')),
     name: v.string(),
@@ -129,6 +134,26 @@ export default defineSchema({
     unit: v.string(),
     category: v.optional(v.string()),
     expiryDate: v.optional(v.string()),
+    /** Buy this every week whatever the plan says. */
+    alwaysBuy: v.optional(v.boolean()),
+    /** Currently in the kitchen. Absent means yes, for pre-merge rows. */
+    inStock: v.optional(v.boolean()),
+  }).index('by_user', ['userId']),
+
+  /**
+   * Marta's own settings: her macro targets and the foods she will not eat.
+   * A single document — this app has one user by design.
+   */
+  preferences: defineTable({
+    userId: v.optional(v.id('users')),
+    goals: v.optional(v.object({
+      calories: v.number(),
+      protein: v.number(),
+      carbs: v.number(),
+      fat: v.number(),
+    })),
+    /** Lowercase terms; any recipe mentioning one is never generated. */
+    dislikes: v.optional(v.array(v.string())),
   }).index('by_user', ['userId']),
 
   /**

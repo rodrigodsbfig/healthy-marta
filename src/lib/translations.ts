@@ -67,6 +67,7 @@ const en = {
   nav_recipes:       'Recipes',
   nav_shopping:      'Shopping List',
   nav_profile:       'Profile',
+  nav_settings:      'Settings',
   nav_workouts:      'Workouts',
   nav_prep:          'Prep',
 
@@ -257,6 +258,7 @@ const pt: typeof en = {
   nav_recipes:       'Receitas',
   nav_shopping:      'Compras',
   nav_profile:       'Perfil',
+  nav_settings:      'Definições',
   nav_workouts:      'Treinos',
   nav_prep:          'Prep',
 

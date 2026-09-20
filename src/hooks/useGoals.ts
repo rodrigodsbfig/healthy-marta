@@ -1,4 +1,5 @@
-import { useState } from 'react'
+import { useQuery } from 'convex/react'
+import { api } from '../../convex/_generated/api'
 
 export type Goals = {
   calories: number
@@ -7,23 +8,17 @@ export type Goals = {
   fat: number
 }
 
-const DEFAULTS: Goals = { calories: 2000, protein: 150, carbs: 200, fat: 65 }
-const KEY = 'nutrition_goals'
-
-export function useGoals() {
-  const [goals, setGoalsState] = useState<Goals>(() => {
-    try {
-      const stored = localStorage.getItem(KEY)
-      return stored ? { ...DEFAULTS, ...JSON.parse(stored) } : DEFAULTS
-    } catch {
-      return DEFAULTS
-    }
-  })
-
-  function setGoals(g: Goals) {
-    setGoalsState(g)
-    localStorage.setItem(KEY, JSON.stringify(g))
-  }
-
-  return { goals, setGoals }
+/**
+ * Marta's daily targets, as she entered them.
+ *
+ * There are deliberately no default numbers. The old 2000 kcal / 150g default
+ * was this app's guess, shown as if it were her nutritionist's prescription
+ * while a generated day came to roughly 1400. Until she sets them, `goals` is
+ * null and the UI shows intake without a target rather than against a made-up
+ * one. They live in Convex, not localStorage, so they follow her between
+ * phone and laptop.
+ */
+export function useGoals(): { goals: Goals | null; loading: boolean } {
+  const prefs = useQuery(api.functions.preferences.get)
+  return { goals: prefs?.goals ?? null, loading: prefs === undefined }
 }

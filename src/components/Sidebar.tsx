@@ -7,8 +7,8 @@ import {
   CalendarDays,
   BookOpen,
   ShoppingCart,
-  UtensilsCrossed,
   Dumbbell,
+  Settings,
 } from 'lucide-react'
 
 const LANGUAGES: { value: Lang; label: string }[] = [
@@ -29,8 +29,8 @@ export function Sidebar({ onNavigate }: SidebarProps = {}) {
     { to: '/meal-plan',     label: t('nav_meal_plan'), icon: CalendarDays },
     { to: '/recipes',       label: t('nav_recipes'),  icon: BookOpen },
     { to: '/shopping-list', label: t('nav_shopping'), icon: ShoppingCart },
-    { to: '/prep',          label: t('nav_prep'),     icon: UtensilsCrossed },
     { to: '/workouts',      label: t('nav_workouts'), icon: Dumbbell },
+    { to: '/settings',      label: t('nav_settings'), icon: Settings },
   ]
 
   return (

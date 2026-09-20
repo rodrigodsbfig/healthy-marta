@@ -104,9 +104,9 @@ export const generateFromPlan = mutation({
     // the staples list would not merge with "230g pão escuro" from the week
     // and she would see the same item twice.
     const alreadyListed = new Set(Object.values(merged).map(i => i.name.toLowerCase()))
-    const staples = await ctx.db.query('staples').collect()
-    for (const s of staples) {
-      if (!s.active) continue
+    const kept = await ctx.db.query('pantryItems').collect()
+    for (const s of kept) {
+      if (!s.alwaysBuy) continue
       if (alreadyListed.has(s.name.toLowerCase())) continue
       add(s.name, s.quantity ?? 1, s.unit ?? '')
     }

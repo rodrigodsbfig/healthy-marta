@@ -4,11 +4,10 @@ import { Plus, RefreshCw, Trash2, ShoppingCart, Package, X, Repeat } from 'lucid
 import { api } from '../../convex/_generated/api'
 import { cn } from '@/lib/utils'
 import { useLanguage } from '@/lib/language'
-import { StaplesPanel } from '@/components/StaplesPanel'
 import { getWeekStart, formatShort, weekDays } from '@/lib/dates'
 import { VoicePantryInput, type VoiceItem } from '@/components/VoicePantryInput'
 
-type View = 'list' | 'pantry' | 'staples'
+type View = 'list' | 'pantry'
 
 function CheckIcon({ checked }: { checked: boolean }) {
   return (
@@ -55,6 +54,7 @@ export function ShoppingList() {
   const pantryItems = useQuery(api.functions.pantry.list)
   const addPantryItem = useMutation(api.functions.pantry.addItem)
   const removePantryItem = useMutation(api.functions.pantry.removeItem)
+  const setPantryFlags = useMutation(api.functions.pantry.setFlags)
 
   const [addingItem, setAddingItem] = useState(false)
   const [newName, setNewName] = useState('')
@@ -71,7 +71,12 @@ export function ShoppingList() {
   const checked = items.filter(i => i.checked).length
 
   // Build a Set of pantry item names for quick lookup
-  const pantryNameSet = new Set((pantryItems ?? []).map(p => p.name.toLowerCase()))
+  // Only foods she actually HAS mark a line as "já tenho". A kept food that
+  // is only there as an always-buy staple is not in the kitchen, and marking
+  // it would tell her to skip the very thing the list exists to remind her of.
+  const pantryNameSet = new Set(
+    (pantryItems ?? []).filter(p => p.inStock ?? true).map(p => p.name.toLowerCase())
+  )
 
   const categories = Array.from(
     items.reduce((map, item, idx) => {
@@ -148,7 +153,7 @@ export function ShoppingList() {
 
       {/* View toggle */}
       <div className="flex gap-1 p-1 bg-[#F5EDE0] rounded-full w-fit">
-        {(['list', 'pantry', 'staples'] as View[]).map(v => (
+        {(['list', 'pantry'] as View[]).map(v => (
           <button
             key={v}
             onClick={() => setView(v)}
@@ -161,12 +166,9 @@ export function ShoppingList() {
           >
             {v === 'list' && <><ShoppingCart size={13} /> {t('to_buy')}</>}
             {v === 'pantry' && <><Package size={13} /> {t('in_pantry')} {pantryItems && pantryItems.length > 0 && <span className="ml-0.5 bg-[#7B5EA7] text-white text-[10px] w-4 h-4 rounded-full flex items-center justify-center">{pantryItems.length}</span>}</>}
-            {v === 'staples' && <><Repeat size={13} /> {lang === 'pt' ? 'Sempre' : 'Always'}</>}
           </button>
         ))}
       </div>
-
-      {view === 'staples' && <StaplesPanel />}
 
       {/* ── SHOPPING LIST VIEW ── */}
       {view === 'list' && (
@@ -380,13 +382,40 @@ export function ShoppingList() {
                   </div>
                   <ul className="space-y-3">
                     {(catItems ?? []).map(item => (
-                      <li key={item!._id} className="flex items-center gap-3 group">
-                        <div className="w-2 h-2 rounded-full bg-[#2D9B5C] shrink-0" />
-                        <span className="flex-1 text-sm text-[#2D1F3D]">{item!.name}</span>
-                        <span className="text-[12px] text-[#7A6775] shrink-0">{item!.quantity > 0 ? `${item!.quantity} ${item!.unit}` : item!.unit}</span>
+                      <li key={item!._id} className="flex items-center gap-2.5 group">
+                        <button
+                          onClick={() => setPantryFlags({ id: item!._id, inStock: !(item!.inStock ?? true) })}
+                          aria-pressed={item!.inStock ?? true}
+                          aria-label={`${t('have_it')} — ${item!.name}`}
+                          title={t('have_it')}
+                          className={cn(
+                            'w-2.5 h-2.5 rounded-full shrink-0 transition-colors',
+                            (item!.inStock ?? true) ? 'bg-[#2D9B5C]' : 'bg-[#E8D9C8]',
+                          )}
+                        />
+                        <span className={cn(
+                          'flex-1 min-w-0 text-sm truncate',
+                          (item!.inStock ?? true) ? 'text-[#2D1F3D]' : 'text-[#7A6775]',
+                        )}>
+                          {item!.name}
+                        </span>
+                        <button
+                          onClick={() => setPantryFlags({ id: item!._id, alwaysBuy: !item!.alwaysBuy })}
+                          aria-pressed={!!item!.alwaysBuy}
+                          title={lang === 'pt' ? 'Comprar sempre' : 'Always buy'}
+                          className={cn(
+                            'flex items-center gap-1 text-[10px] font-semibold px-2 py-0.5 rounded-full border transition-colors shrink-0',
+                            item!.alwaysBuy
+                              ? 'bg-[#EEE0FF] border-[#7B5EA7] text-[#7B5EA7]'
+                              : 'border-[#E8D9C8] text-[#7A6775] hover:border-[#7B5EA7]',
+                          )}
+                        >
+                          <Repeat size={10} />{lang === 'pt' ? 'sempre' : 'always'}
+                        </button>
                         <button
                           onClick={() => removePantryItem({ id: item!._id })}
-                          className="opacity-0 group-hover:opacity-100 text-[#E8D9C8] hover:text-red-400 transition-all shrink-0"
+                          aria-label={`${t('delete')} ${item!.name}`}
+                          className="text-[#E8D9C8] hover:text-red-400 transition-all shrink-0 md:opacity-0 md:group-hover:opacity-100"
                         >
                           <X size={14} />
                         </button>

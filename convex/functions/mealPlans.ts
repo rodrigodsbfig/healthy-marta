@@ -90,9 +90,14 @@ export const generate = mutation({
       title: r.title,
       mealMoments: r.mealMoments,
       planComponents: r.planComponents,
+      ingredientNames: r.ingredients.map((i) => i.name),
     }))
 
-    const result = generateWeek(candidates, { mode, seed, skipMeioDaManha })
+    const prefs = await ctx.db.query('preferences').first()
+    const result = generateWeek(candidates, {
+      mode, seed, skipMeioDaManha,
+      dislikes: prefs?.dislikes ?? [],
+    })
     const slots = result.slots.map((s) => ({
       day: s.day,
       meal: s.meal,

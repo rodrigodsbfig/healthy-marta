@@ -20,6 +20,8 @@ export interface CandidateRecipe {
   title: string
   mealMoments?: string[]
   planComponents?: Array<{ kind: string; optionId: string }>
+  /** Ingredient names, so dislikes can be matched against real foods. */
+  ingredientNames?: string[]
 }
 
 export interface GeneratedSlot {
@@ -75,17 +77,34 @@ const RUN_LENGTH: Record<GenerationMode, number> = { variada: 1, pratica: 3 }
 /** Moments worth batch-cooking. Snacks and drinks repeat freely either way. */
 const BATCHABLE: MealMoment[] = ['almoco', 'jantar']
 
+/** Does this recipe mention a food Marta will not eat? */
+export function isDisliked(recipe: CandidateRecipe, dislikes: string[]): boolean {
+  if (dislikes.length === 0) return false
+  const haystack = [recipe.title, ...(recipe.ingredientNames ?? [])].join(' ').toLowerCase()
+  return dislikes.some((d) => d && haystack.includes(d))
+}
+
 export function generateWeek(
   recipes: CandidateRecipe[],
-  opts: { mode: GenerationMode; seed?: number; skipMeioDaManha?: boolean } 
+  opts: {
+    mode: GenerationMode
+    seed?: number
+    skipMeioDaManha?: boolean
+    /** Lowercase terms; recipes mentioning one are never picked. */
+    dislikes?: string[]
+  }
 ): GenerationResult {
   const rand = makeRandom(opts.seed ?? Date.now())
   const slots: GeneratedSlot[] = []
   const notes: string[] = []
   const warnings: string[] = []
 
+  const dislikes = (opts.dislikes ?? []).map((d) => d.trim().toLowerCase()).filter(Boolean)
+  const allowed = recipes.filter((r) => !isDisliked(r, dislikes))
+  const excludedCount = recipes.length - allowed.length
+
   const byMoment = (m: MealMoment) =>
-    recipes.filter((r) => (r.mealMoments ?? []).includes(m))
+    allowed.filter((r) => (r.mealMoments ?? []).includes(m))
   const byId = new Map(recipes.map((r) => [r._id, r]))
 
   // The plan allows one free meal per week during the weight-loss phase.
@@ -104,7 +123,14 @@ export function generateWeek(
 
     const pool = byMoment(moment)
     if (pool.length === 0) {
-      warnings.push(`Sem receitas para ${moment} — esse momento ficou por preencher.`)
+      // Distinguish "nothing written yet" from "everything ruled out", so a
+      // dislike that empties a moment is obvious rather than looking like a bug.
+      const existed = recipes.some((r) => (r.mealMoments ?? []).includes(moment))
+      warnings.push(
+        existed
+          ? `Todas as receitas de ${moment} foram excluídas pelo que não comes — esse momento ficou vazio.`
+          : `Sem receitas para ${moment} — esse momento ficou por preencher.`
+      )
       continue
     }
 
@@ -187,6 +213,9 @@ export function generateWeek(
       : 'Modo variada: um prato diferente por dia.'
   )
   notes.push('Um jantar ficou livre para a refeição livre da semana.')
+  if (excludedCount > 0) {
+    notes.push(`${excludedCount} receita(s) ignoradas por conterem algo que não comes.`)
+  }
 
   return { slots, refeicaoLivreDay, notes, warnings }
 }

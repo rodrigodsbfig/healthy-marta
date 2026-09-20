@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { Link } from 'react-router-dom'
 import { useQuery, useMutation } from 'convex/react'
 import { Trash2 } from 'lucide-react'
 import { api } from '../../convex/_generated/api'
@@ -94,10 +95,12 @@ export function Today() {
     setLogOpen(true)
   }
 
+  // Targets are Marta's to set. Until she has, intake is shown on its own
+  // rather than as a percentage of a number this app invented.
   const calLogged    = Math.round(totals.calories)
-  const calGoal      = goals.calories
-  const calPct       = Math.min((calLogged / calGoal) * 100, 100)
-  const calRemaining = Math.max(calGoal - calLogged, 0)
+  const calGoal      = goals?.calories ?? null
+  const calPct       = calGoal ? Math.min((calLogged / calGoal) * 100, 100) : 0
+  const calRemaining = calGoal ? Math.max(calGoal - calLogged, 0) : 0
 
   return (
     <>
@@ -122,17 +125,21 @@ export function Today() {
         <div className="space-y-3">
           {/* Calories — featured card */}
           <div className="bg-white rounded-2xl p-5 shadow-[0_4px_20px_0_#7B5EA714] flex items-center gap-5">
-            <div className="relative shrink-0">
-              <CalRing pct={calPct} />
-              <div className="absolute inset-0 flex items-center justify-center">
-                <span className="text-[11px] font-bold text-[#7B5EA7]">{Math.round(calPct)}%</span>
+            {calGoal !== null && (
+              <div className="relative shrink-0">
+                <CalRing pct={calPct} />
+                <div className="absolute inset-0 flex items-center justify-center">
+                  <span className="text-[11px] font-bold text-[#7B5EA7]">{Math.round(calPct)}%</span>
+                </div>
               </div>
-            </div>
+            )}
             <div className="flex-1 min-w-0">
               <p className="text-[11px] font-semibold uppercase tracking-wide text-[#7B5EA7] mb-1">{t('cal_label')}</p>
               <div className="flex items-baseline gap-2">
                 <span className="text-3xl font-display font-bold text-[#2D1F3D]">{calLogged}</span>
-                <span className="text-sm text-[#7A6775]">/ {calGoal} kcal</span>
+                <span className="text-sm text-[#7A6775]">
+                  {calGoal ? `/ ${calGoal} kcal` : 'kcal'}
+                </span>
               </div>
               <div className="w-full h-2.5 bg-[#EEE0FF] rounded-full mt-2.5">
                 <div
@@ -140,9 +147,15 @@ export function Today() {
                   style={{ width: `${calPct}%` }}
                 />
               </div>
-              <p className="text-[11px] text-[#7A6775] mt-1.5">
-                {calRemaining} kcal {t('remaining')}
-              </p>
+              {calGoal ? (
+                <p className="text-[11px] text-[#7A6775] mt-1.5">
+                  {calRemaining} kcal {t('remaining')}
+                </p>
+              ) : (
+                <Link to="/settings" className="inline-block text-[11px] font-semibold text-[#7B5EA7] mt-1.5 hover:underline">
+                  {lang === 'pt' ? 'Define as tuas metas →' : 'Set your targets →'}
+                </Link>
+              )}
             </div>
           </div>
 
@@ -150,9 +163,9 @@ export function Today() {
           <div className="grid grid-cols-3 gap-3">
             {MACRO_SECONDARY.map(({ key, labelKey, unit, color, light, text }) => {
               const logged    = Math.round(totals[key])
-              const goal      = goals[key]
-              const pct       = Math.min((logged / goal) * 100, 100)
-              const remaining = Math.max(goal - logged, 0)
+              const goal      = goals?.[key] ?? null
+              const pct       = goal ? Math.min((logged / goal) * 100, 100) : 0
+              const remaining = goal ? Math.max(goal - logged, 0) : 0
               return (
                 <div key={key} className="bg-white rounded-2xl p-4 shadow-[0_4px_20px_0_#7B5EA714]">
                   <p className={`text-[11px] font-semibold uppercase tracking-wide mb-1.5 ${text}`}>{t(labelKey)}</p>
@@ -162,7 +175,9 @@ export function Today() {
                   <div className={`w-full h-2 ${light} rounded-full mt-2`}>
                     <div className={`h-2 ${color} rounded-full transition-all`} style={{ width: `${pct}%` }} />
                   </div>
-                  <p className="text-[10px] text-[#7A6775] mt-1">{remaining}{unit} {t('remaining')}</p>
+                  {goal !== null && (
+                    <p className="text-[10px] text-[#7A6775] mt-1">{remaining}{unit} {t('remaining')}</p>
+                  )}
                 </div>
               )
             })}
@@ -248,7 +263,8 @@ export function Today() {
               {DAY_SHORT[lang].map((day, i) => {
                 const dateStr = days[i]
                 const cal = calByDate.get(dateStr) ?? 0
-                const pct = Math.min((cal / calGoal) * 100, 100)
+                const scale = calGoal ?? Math.max(...calByDate.values(), 1)
+                const pct = Math.min((cal / scale) * 100, 100)
                 const isToday = i === dayIdx
                 const isFuture = i > dayIdx
                 const barColor = isFuture

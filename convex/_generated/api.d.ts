@@ -14,6 +14,7 @@ import type * as functions_library from "../functions/library.js";
 import type * as functions_mealPlans from "../functions/mealPlans.js";
 import type * as functions_nutritionLogs from "../functions/nutritionLogs.js";
 import type * as functions_pantry from "../functions/pantry.js";
+import type * as functions_preferences from "../functions/preferences.js";
 import type * as functions_prepSessions from "../functions/prepSessions.js";
 import type * as functions_recipes from "../functions/recipes.js";
 import type * as functions_shoppingLists from "../functions/shoppingLists.js";
@@ -36,6 +37,7 @@ declare const fullApi: ApiFromModules<{
   "functions/mealPlans": typeof functions_mealPlans;
   "functions/nutritionLogs": typeof functions_nutritionLogs;
   "functions/pantry": typeof functions_pantry;
+  "functions/preferences": typeof functions_preferences;
   "functions/prepSessions": typeof functions_prepSessions;
   "functions/recipes": typeof functions_recipes;
   "functions/shoppingLists": typeof functions_shoppingLists;
