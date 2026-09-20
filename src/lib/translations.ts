@@ -67,6 +67,7 @@ const en = {
   nav_recipes:       'Recipes',
   nav_shopping:      'Shopping List',
   nav_profile:       'Profile',
+  nav_workouts:      'Workouts',
   nav_prep:          'Prep',
 
   // Common
@@ -256,6 +257,7 @@ const pt: typeof en = {
   nav_recipes:       'Receitas',
   nav_shopping:      'Compras',
   nav_profile:       'Perfil',
+  nav_workouts:      'Treinos',
   nav_prep:          'Prep',
 
   cancel:            'Cancelar',

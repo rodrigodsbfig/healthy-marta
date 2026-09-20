@@ -6,6 +6,7 @@ import { Recipes } from '@/pages/Recipes'
 import { RecipeDetail } from '@/pages/RecipeDetail'
 import { ShoppingList } from '@/pages/ShoppingList'
 import { PrepSession } from '@/pages/PrepSession'
+import { Workouts } from '@/pages/Workouts'
 
 export default function App() {
   return (
@@ -17,6 +18,7 @@ export default function App() {
         <Route path="recipes/:id" element={<RecipeDetail />} />
         <Route path="shopping-list" element={<ShoppingList />} />
         <Route path="prep" element={<PrepSession />} />
+        <Route path="workouts" element={<Workouts />} />
       </Route>
     </Routes>
   )

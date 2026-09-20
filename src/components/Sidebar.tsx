@@ -8,6 +8,7 @@ import {
   BookOpen,
   ShoppingCart,
   UtensilsCrossed,
+  Dumbbell,
 } from 'lucide-react'
 
 const LANGUAGES: { value: Lang; label: string }[] = [
@@ -24,6 +25,7 @@ export function Sidebar() {
     { to: '/recipes',       label: t('nav_recipes'),  icon: BookOpen },
     { to: '/shopping-list', label: t('nav_shopping'), icon: ShoppingCart },
     { to: '/prep',          label: t('nav_prep'),     icon: UtensilsCrossed },
+    { to: '/workouts',      label: t('nav_workouts'), icon: Dumbbell },
   ]
 
   return (
