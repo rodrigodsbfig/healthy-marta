@@ -1,3 +1,5 @@
+import { PLAN } from '../../convex/lib/plan'
+
 export type Lang = 'en' | 'pt'
 
 // Tag display names: values are stored as English in DB, displayed translated
@@ -50,10 +52,11 @@ export const DAY_SHORT: Record<Lang, string[]> = {
   pt: ['Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb', 'Dom'],
 }
 
-// Meal type labels (stored in English in DB)
+// Meal moment labels, derived from the nutrition plan so the eight moments
+// are defined in exactly one place. A revised plan renames them everywhere.
 export const MEAL_LABELS: Record<Lang, Record<string, string>> = {
-  en: { breakfast: 'Breakfast', lunch: 'Lunch', dinner: 'Dinner', snack: 'Snack' },
-  pt: { breakfast: 'Pequeno-almoço', lunch: 'Almoço', dinner: 'Jantar', snack: 'Lanche' },
+  en: Object.fromEntries(PLAN.map(m => [m.moment, m.labelEn])),
+  pt: Object.fromEntries(PLAN.map(m => [m.moment, m.label])),
 }
 
 // All other UI strings

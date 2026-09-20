@@ -6,8 +6,9 @@ import type { Id } from '../../convex/_generated/dataModel'
 import { cn } from '@/lib/utils'
 import { useLanguage } from '@/lib/language'
 import { MEAL_LABELS } from '@/lib/translations'
+import { MEAL_MOMENTS, type MealMoment } from '@/lib/mealMoments'
 
-type MealType = 'breakfast' | 'lunch' | 'dinner' | 'snack'
+type MealType = MealMoment
 
 interface RecipePickerProps {
   open: boolean
@@ -21,15 +22,13 @@ export function RecipePicker({ open, dayLabel, onClose, onPick }: RecipePickerPr
   const recipes = useQuery(api.functions.recipes.list)
   const [search, setSearch] = useState('')
   const [selectedId, setSelectedId] = useState<Id<'recipes'> | null>(null)
-  const [meal, setMeal] = useState<MealType>('lunch')
+  const [meal, setMeal] = useState<MealType>('almoco')
   const [servings, setServings] = useState('1')
 
-  const MEAL_TYPES: { value: MealType; label: string }[] = [
-    { value: 'breakfast', label: MEAL_LABELS[lang].breakfast },
-    { value: 'lunch',     label: MEAL_LABELS[lang].lunch },
-    { value: 'dinner',    label: MEAL_LABELS[lang].dinner },
-    { value: 'snack',     label: MEAL_LABELS[lang].snack },
-  ]
+  const MEAL_TYPES: { value: MealType; label: string }[] = MEAL_MOMENTS.map(m => ({
+    value: m,
+    label: MEAL_LABELS[lang][m],
+  }))
 
   const filtered = (recipes ?? []).filter(r =>
     r.title.toLowerCase().includes(search.toLowerCase())
@@ -40,7 +39,7 @@ export function RecipePicker({ open, dayLabel, onClose, onPick }: RecipePickerPr
     onPick(selectedId, meal, Number(servings) || 1)
     setSelectedId(null)
     setSearch('')
-    setMeal('lunch')
+    setMeal('almoco')
     setServings('1')
   }
 
@@ -63,13 +62,15 @@ export function RecipePicker({ open, dayLabel, onClose, onPick }: RecipePickerPr
         </div>
 
         {/* Meal type */}
-        <div className="px-5 pt-4 flex gap-2">
+        <div className="px-5 pt-4 grid grid-cols-4 gap-2">
           {MEAL_TYPES.map(m => (
             <button
               key={m.value}
               onClick={() => setMeal(m.value)}
               className={cn(
-                'flex-1 text-[12px] font-semibold py-1.5 rounded-full border transition-colors',
+                // Labels wrap rather than truncate: several moment names are
+                // long in both languages ("Afternoon snack", "Pequeno Almoço").
+                'text-[11px] font-semibold py-1.5 px-2 rounded-xl border transition-colors leading-tight min-h-[34px] flex items-center justify-center text-center',
                 meal === m.value
                   ? 'bg-[#7B5EA7] text-white border-[#7B5EA7]'
                   : 'text-[#7A6775] border-[#E8D9C8] hover:border-[#7B5EA7]',

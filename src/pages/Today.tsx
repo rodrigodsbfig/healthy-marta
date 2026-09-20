@@ -6,6 +6,7 @@ import type { Id } from '../../convex/_generated/dataModel'
 import { cn } from '@/lib/utils'
 import { useLanguage } from '@/lib/language'
 import { MEAL_LABELS, DAY_SHORT } from '@/lib/translations'
+import { MOMENT_COLORS } from '@/lib/mealMoments'
 import { useGoals } from '@/hooks/useGoals'
 import { getWeekStart, weekDays } from '@/lib/dates'
 import { LogMealModal } from '@/components/LogMealModal'
@@ -16,19 +17,11 @@ const MACRO_SECONDARY = [
   { key: 'fat'     as const, labelKey: 'fat_label'     as const, unit: 'g', color: 'bg-[#7A6775]', light: 'bg-[#F5EDE0]', text: 'text-[#7A6775]' },
 ]
 
-const MEAL_DOT: Record<string, string> = {
-  breakfast: 'bg-[#7B5EA7]',
-  lunch:     'bg-[#2D9B5C]',
-  dinner:    'bg-[#E89B6C]',
-  snack:     'bg-[#7A6775]',
-}
+const MEAL_DOT: Record<string, string> =
+  Object.fromEntries(Object.entries(MOMENT_COLORS).map(([m, c]) => [m, c.dot]))
 
-const MEAL_BG: Record<string, string> = {
-  breakfast: 'bg-[#EEE0FF]',
-  lunch:     'bg-[#E8F5EE]',
-  dinner:    'bg-[#FFF3E8]',
-  snack:     'bg-[#F5EDE0]',
-}
+const MEAL_BG: Record<string, string> =
+  Object.fromEntries(Object.entries(MOMENT_COLORS).map(([m, c]) => [m, c.bg]))
 
 function todayStr() {
   return new Date().toISOString().split('T')[0]

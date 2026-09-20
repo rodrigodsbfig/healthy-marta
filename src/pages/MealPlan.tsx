@@ -6,18 +6,14 @@ import type { Id } from '../../convex/_generated/dataModel'
 import { cn } from '@/lib/utils'
 import { useLanguage } from '@/lib/language'
 import { DAY_NAMES, DAY_SHORT, MEAL_LABELS } from '@/lib/translations'
+import { MEAL_MOMENTS, MOMENT_COLORS, type MealMoment } from '@/lib/mealMoments'
 import { getWeekStart, addWeeks, formatShort, weekDays } from '@/lib/dates'
 import { RecipePicker } from '@/components/RecipePicker'
 
-type MealType = 'breakfast' | 'lunch' | 'dinner' | 'snack'
+type MealType = MealMoment
 
-const MEAL_ORDER: MealType[] = ['breakfast', 'lunch', 'dinner', 'snack']
-const MEAL_COLORS: Record<MealType, { dot: string; bg: string }> = {
-  breakfast: { dot: 'bg-[#7B5EA7]', bg: 'bg-[#EEE0FF]' },
-  lunch:     { dot: 'bg-[#2D9B5C]', bg: 'bg-[#E8F5EE]' },
-  dinner:    { dot: 'bg-[#E89B6C]', bg: 'bg-[#FFF3E8]' },
-  snack:     { dot: 'bg-[#7A6775]', bg: 'bg-[#F5EDE0]' },
-}
+const MEAL_ORDER: MealType[] = MEAL_MOMENTS
+const MEAL_COLORS = MOMENT_COLORS
 
 export function MealPlan() {
   const { t, lang } = useLanguage()

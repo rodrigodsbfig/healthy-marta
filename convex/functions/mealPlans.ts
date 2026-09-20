@@ -1,11 +1,16 @@
 import { query, mutation } from '../_generated/server'
 import { v } from 'convex/values'
 
+/** Kept in sync with MEAL_MOMENTS in convex/lib/plan.ts. */
 const mealType = v.union(
-  v.literal('breakfast'),
-  v.literal('lunch'),
-  v.literal('dinner'),
-  v.literal('snack'),
+  v.literal('acordar'),
+  v.literal('pequenoAlmoco'),
+  v.literal('meioDaManha'),
+  v.literal('almoco'),
+  v.literal('lanche1'),
+  v.literal('lanche2'),
+  v.literal('jantar'),
+  v.literal('ceia'),
 )
 
 export const getByWeek = query({
