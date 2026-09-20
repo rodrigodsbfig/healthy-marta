@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import { useQuery, useMutation } from 'convex/react'
-import { ChevronLeft, ChevronRight, Plus, X } from 'lucide-react'
+import { ChevronLeft, ChevronRight, Plus, X, PartyPopper } from 'lucide-react'
 import { api } from '../../convex/_generated/api'
 import type { Id } from '../../convex/_generated/dataModel'
 import { cn } from '@/lib/utils'
@@ -32,6 +32,7 @@ export function MealPlan() {
 
   const days = weekDays(weekStart)
   const slotsForDay = (plan?.slots ?? []).filter(s => s.day === selectedDay)
+  const isRefeicaoLivreDay = plan?.refeicaoLivreDay === selectedDay
 
   function mealsOnDay(dayIdx: number) {
     return (plan?.slots ?? []).filter(s => s.day === dayIdx).length
@@ -158,8 +159,32 @@ export function MealPlan() {
             </div>
           ) : (
             <div className="space-y-3">
-              {MEAL_ORDER.filter(m => slotsForDay.some(s => s.meal === m)).map(mealType => {
-                const slot = slotsForDay.find(s => s.meal === mealType)!
+              {MEAL_ORDER
+                .filter(m => slotsForDay.some(s => s.meal === m) || (m === 'jantar' && isRefeicaoLivreDay))
+                .map(mealType => {
+                const slot = slotsForDay.find(s => s.meal === mealType)
+                // The generator deliberately leaves one dinner empty for the
+                // plan's weekly free meal. Shown in place so the day still
+                // reads in the order she eats, rather than looking skipped.
+                if (!slot) return (
+                  <div key={mealType} className="flex items-center gap-4 p-4 rounded-xl bg-[#FFF3E8] border border-dashed border-[#E89B6C]/50">
+                    <div className="w-2 self-stretch rounded-full shrink-0 bg-[#E89B6C]" />
+                    <div className="w-10 h-10 rounded-xl flex items-center justify-center shrink-0 bg-[#FFE4CE]">
+                      <PartyPopper size={18} className="text-[#E89B6C]" />
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      <p className="text-[11px] text-[#7A6775] mb-0.5">{MEAL_LABELS[lang][mealType]}</p>
+                      <p className="text-sm font-semibold text-[#2D1F3D]">
+                        {lang === 'pt' ? 'Refeição livre' : 'Free meal'}
+                      </p>
+                      <p className="text-[11px] text-[#7A6775]">
+                        {lang === 'pt'
+                          ? 'O plano permite 1 refeição livre por semana — come o que te apetecer, devagar.'
+                          : 'Your plan allows one free meal a week — eat what you fancy, slowly.'}
+                      </p>
+                    </div>
+                  </div>
+                )
                 const recipe = recipeMap.get(slot.recipeId)
                 const colors = MEAL_COLORS[mealType]
                 const servings = slot.servings

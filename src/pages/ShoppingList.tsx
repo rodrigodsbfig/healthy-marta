@@ -1,13 +1,14 @@
 import { useState } from 'react'
 import { useQuery, useMutation } from 'convex/react'
-import { Plus, RefreshCw, Trash2, ShoppingCart, Package, X } from 'lucide-react'
+import { Plus, RefreshCw, Trash2, ShoppingCart, Package, X, Repeat } from 'lucide-react'
 import { api } from '../../convex/_generated/api'
 import { cn } from '@/lib/utils'
 import { useLanguage } from '@/lib/language'
+import { StaplesPanel } from '@/components/StaplesPanel'
 import { getWeekStart, formatShort, weekDays } from '@/lib/dates'
 import { VoicePantryInput, type VoiceItem } from '@/components/VoicePantryInput'
 
-type View = 'list' | 'pantry'
+type View = 'list' | 'pantry' | 'staples'
 
 function CheckIcon({ checked }: { checked: boolean }) {
   return (
@@ -147,7 +148,7 @@ export function ShoppingList() {
 
       {/* View toggle */}
       <div className="flex gap-1 p-1 bg-[#F5EDE0] rounded-full w-fit">
-        {(['list', 'pantry'] as View[]).map(v => (
+        {(['list', 'pantry', 'staples'] as View[]).map(v => (
           <button
             key={v}
             onClick={() => setView(v)}
@@ -158,13 +159,14 @@ export function ShoppingList() {
                 : 'text-[#7A6775] hover:text-[#2D1F3D]',
             )}
           >
-            {v === 'list'
-              ? <><ShoppingCart size={13} /> {t('to_buy')}</>
-              : <><Package size={13} /> {t('in_pantry')} {pantryItems && pantryItems.length > 0 && <span className="ml-0.5 bg-[#7B5EA7] text-white text-[10px] w-4 h-4 rounded-full flex items-center justify-center">{pantryItems.length}</span>}</>
-            }
+            {v === 'list' && <><ShoppingCart size={13} /> {t('to_buy')}</>}
+            {v === 'pantry' && <><Package size={13} /> {t('in_pantry')} {pantryItems && pantryItems.length > 0 && <span className="ml-0.5 bg-[#7B5EA7] text-white text-[10px] w-4 h-4 rounded-full flex items-center justify-center">{pantryItems.length}</span>}</>}
+            {v === 'staples' && <><Repeat size={13} /> {lang === 'pt' ? 'Sempre' : 'Always'}</>}
           </button>
         ))}
       </div>
+
+      {view === 'staples' && <StaplesPanel />}
 
       {/* ── SHOPPING LIST VIEW ── */}
       {view === 'list' && (

@@ -27,6 +27,8 @@ const COPY = {
     working: 'A gerar…',
     done: 'refeições planeadas',
     close: 'Fechar',
+    skipLabel: 'Saltar o meio da manhã',
+    skipHint: 'Para semanas em casa — o plano dispensa-o nos dias em que comes fruta ao pequeno-almoço.',
   },
   en: {
     generate: 'Generate week',
@@ -41,6 +43,8 @@ const COPY = {
     working: 'Generating…',
     done: 'meals planned',
     close: 'Close',
+    skipLabel: 'Skip mid-morning',
+    skipHint: 'For weeks at home — the plan drops it on days you have fruit at breakfast.',
   },
 }
 
@@ -51,6 +55,7 @@ export function GenerateWeekButton({ weekStart, hasExistingPlan }: GenerateWeekB
 
   const [open, setOpen] = useState(false)
   const [mode, setMode] = useState<Mode>('pratica')
+  const [skipMeioDaManha, setSkipMeioDaManha] = useState(false)
   const [busy, setBusy] = useState(false)
   const [result, setResult] = useState<{
     notes: string[]
@@ -61,7 +66,7 @@ export function GenerateWeekButton({ weekStart, hasExistingPlan }: GenerateWeekB
   async function run() {
     setBusy(true)
     try {
-      setResult(await generate({ weekStart, mode }))
+      setResult(await generate({ weekStart, mode, skipMeioDaManha }))
     } finally {
       setBusy(false)
     }
@@ -122,6 +127,19 @@ export function GenerateWeekButton({ weekStart, hasExistingPlan }: GenerateWeekB
                     </p>
                   </button>
                 ))}
+
+                <label className="flex items-start gap-2.5 px-1 cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={skipMeioDaManha}
+                    onChange={e => setSkipMeioDaManha(e.target.checked)}
+                    className="mt-0.5 w-4 h-4 accent-[#7B5EA7] shrink-0"
+                  />
+                  <span className="min-w-0">
+                    <span className="block text-sm font-semibold text-[#2D1F3D]">{c.skipLabel}</span>
+                    <span className="block text-[12px] text-[#7A6775]">{c.skipHint}</span>
+                  </span>
+                </label>
 
                 {hasExistingPlan && (
                   <div className="flex items-start gap-2 bg-[#FFF3E8] border border-[#E89B6C]/40 rounded-xl px-3 py-2">
