@@ -1,16 +1,19 @@
 import { useState } from 'react'
-import { useNavigate, useParams } from 'react-router-dom'
+import { useNavigate, useParams, useSearchParams } from 'react-router-dom'
 import { useQuery, useMutation } from 'convex/react'
 import { ArrowLeft, Clock, Users, Pencil, Trash2, ChefHat } from 'lucide-react'
 import { api } from '../../convex/_generated/api'
 import type { Id } from '../../convex/_generated/dataModel'
 import { useLanguage } from '@/lib/language'
-import { translateTag } from '@/lib/translations'
+import { translateTag, MEAL_LABELS } from '@/lib/translations'
+import { resolveIngredients } from '@/lib/portions'
+import type { MealMoment } from '@/lib/mealMoments'
 import { RecipeForm } from '@/components/RecipeForm'
 
 export function RecipeDetail() {
   const { t, lang } = useLanguage()
   const { id } = useParams<{ id: string }>()
+  const [searchParams] = useSearchParams()
   const navigate = useNavigate()
   const recipe = useQuery(api.functions.recipes.get, { id: id as Id<'recipes'> })
   const remove = useMutation(api.functions.recipes.remove)
@@ -21,6 +24,19 @@ export function RecipeDetail() {
   const servings = scaledServings ?? recipe?.servings ?? 1
   const scaleFactor = recipe ? servings / (recipe.servings || 1) : 1
   const isScaled = recipe && scaledServings !== null && scaledServings !== recipe.servings
+
+  // Which meal moment these quantities are for. Follows the slot the recipe
+  // was opened from, so a dinner shows dinner portions; falls back to the
+  // recipe's own primary moment when browsed from the library.
+  const moments = (recipe?.mealMoments ?? []) as MealMoment[]
+  const urlMoment = searchParams.get('moment') as MealMoment | null
+  const [pickedMoment, setPickedMoment] = useState<MealMoment | null>(null)
+  const viewMoment: MealMoment | undefined =
+    pickedMoment ?? (urlMoment && moments.includes(urlMoment) ? urlMoment : moments[0])
+
+  const shownIngredients = recipe
+    ? resolveIngredients(recipe.ingredients, viewMoment, recipe.comSopa ?? false)
+    : []
 
   const nutritionConfig = [
     { key: 'calories' as const, label: t('cal_label'),     unit: 'kcal', bg: 'bg-[#EEE0FF]', text: 'text-[#7B5EA7]' },
@@ -151,11 +167,33 @@ export function RecipeDetail() {
               </p>
             </div>
 
-            {recipe.ingredients.length > 0 && (
+            {moments.length > 1 && (
+              <div className="flex items-center gap-2 mb-4">
+                <span className="text-[12px] text-[#7A6775]">
+                  {lang === 'pt' ? 'Porções para:' : 'Portions for:'}
+                </span>
+                {moments.map(m => (
+                  <button
+                    key={m}
+                    onClick={() => setPickedMoment(m)}
+                    className={
+                      'text-[12px] font-semibold px-3 py-1 rounded-full border transition-colors ' +
+                      (viewMoment === m
+                        ? 'bg-[#7B5EA7] text-white border-[#7B5EA7]'
+                        : 'text-[#7A6775] border-[#E8D9C8] hover:border-[#7B5EA7]')
+                    }
+                  >
+                    {MEAL_LABELS[lang][m]}
+                  </button>
+                ))}
+              </div>
+            )}
+
+            {shownIngredients.length > 0 && (
               <div>
                 <h2 className="font-display font-bold text-base text-[#2D1F3D] mb-3">{t('ingredients')}</h2>
                 <ul className="space-y-2">
-                  {recipe.ingredients.map((ing, i) => {
+                  {shownIngredients.map((ing, i) => {
                     const qty = ing.quantity * scaleFactor
                     const display = qty % 1 === 0 ? qty : parseFloat(qty.toFixed(1))
                     return (
@@ -169,7 +207,7 @@ export function RecipeDetail() {
               </div>
             )}
 
-            {recipe.ingredients.length > 0 && recipe.steps.length > 0 && (
+            {shownIngredients.length > 0 && recipe.steps.length > 0 && (
               <div className="border-t border-[#E8D9C8]" />
             )}
 

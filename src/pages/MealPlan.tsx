@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import { Link } from 'react-router-dom'
 import { useQuery, useMutation } from 'convex/react'
 import { ChevronLeft, ChevronRight, Plus, X } from 'lucide-react'
 import { api } from '../../convex/_generated/api'
@@ -168,11 +169,14 @@ export function MealPlan() {
                     <div className={cn('w-10 h-10 rounded-xl flex items-center justify-center shrink-0', colors.bg)}>
                       <div className={cn('w-2.5 h-2.5 rounded-full', colors.dot)} />
                     </div>
-                    <div className="flex-1 min-w-0">
+                    <Link
+                      to={`/recipes/${slot.recipeId}?moment=${mealType}`}
+                      className="flex-1 min-w-0"
+                    >
                       <p className="text-[11px] text-[#7A6775] mb-0.5">
                         {MEAL_LABELS[lang][mealType]}
                       </p>
-                      <p className="text-sm font-semibold text-[#2D1F3D] truncate">
+                      <p className="text-sm font-semibold text-[#2D1F3D] truncate hover:text-[#7B5EA7] transition-colors">
                         {recipe?.title ?? t('loading')}
                       </p>
                       {recipe && (
@@ -181,7 +185,7 @@ export function MealPlan() {
                           {recipe.nutrition ? ` · ${Math.round(recipe.nutrition.calories * servings / recipe.servings)} kcal` : ''}
                         </p>
                       )}
-                    </div>
+                    </Link>
                     <button
                       onClick={() => handleRemove(mealType)}
                       className="opacity-0 group-hover:opacity-100 text-[#E8D9C8] hover:text-red-400 transition-all"
