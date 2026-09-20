@@ -476,3 +476,33 @@ export function portionFor(optionId: string, opts: { comSopa?: boolean } = {}): 
   // ("3 marinheiras", "1 ovo + 50g claras"), so it is returned as written.
   return o.amount ?? o.label
 }
+
+/**
+ * Find the same food's option at a different meal moment.
+ *
+ * The plan lists the same foods at different portions per moment — 90g arroz
+ * at almoço, 60g at jantar — as separate options with separate ids. A recipe
+ * declares its components once (at almoço portions) and this resolves them for
+ * whichever moment it is actually being served at, so one recipe can be both
+ * lunch and dinner without stating the wrong quantity.
+ */
+export function equivalentOption(optionId: string, moment: MealMoment): PlanOption | undefined {
+  const source = OPTIONS_BY_ID[optionId]
+  if (!source) return undefined
+  if (source.moment === moment) return source
+  const slot = getMoment(moment).slots.find((s) => s.kind === source.kind)
+  return slot?.options.find((o) => o.label === source.label)
+}
+
+/** The grams (or ml) an option calls for, accounting for the soup rule. */
+export function amountFor(
+  option: PlanOption,
+  opts: { comSopa?: boolean } = {}
+): { grams?: number; ml?: number; amount?: string } {
+  if (option.grams !== undefined) {
+    const useSemSopa = option.gramsSemSopa !== undefined && opts.comSopa === false
+    return { grams: useSemSopa ? option.gramsSemSopa : option.grams }
+  }
+  if (option.ml !== undefined) return { ml: option.ml }
+  return { amount: option.amount }
+}
