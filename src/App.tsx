@@ -1,4 +1,4 @@
-import { Routes, Route } from 'react-router-dom'
+import { Routes, Route, Navigate } from 'react-router-dom'
 import { Layout } from '@/components/Layout'
 import { Today } from '@/pages/Today'
 import { MealPlan } from '@/pages/MealPlan'
@@ -19,6 +19,9 @@ export default function App() {
         <Route path="shopping-list" element={<ShoppingList />} />
         <Route path="workouts" element={<Workouts />} />
         <Route path="settings" element={<Settings />} />
+        {/* Anything else goes home rather than rendering a blank page —
+            /prep still exists in old bookmarks and in the PWA cache. */}
+        <Route path="*" element={<Navigate to="/" replace />} />
       </Route>
     </Routes>
   )
