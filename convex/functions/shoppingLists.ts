@@ -57,8 +57,15 @@ export const generateFromPlan = mutation({
     }
 
     if (plan) {
+      // Load each distinct recipe once. A generated week has 55 slots but
+      // only ~15 distinct dishes, so fetching per slot was 55 sequential
+      // reads to answer 15 questions.
+      const distinct = [...new Set(plan.slots.map((s) => s.recipeId))]
+      const loaded = await Promise.all(distinct.map((id) => ctx.db.get(id)))
+      const recipeById = new Map(distinct.map((id, i) => [id, loaded[i]]))
+
       for (const slot of plan.slots) {
-        const recipe = await ctx.db.get(slot.recipeId)
+        const recipe = recipeById.get(slot.recipeId)
         if (!recipe) continue
         const scale = slot.servings / recipe.servings
 
