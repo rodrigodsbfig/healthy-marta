@@ -2,6 +2,7 @@ import { useState } from 'react'
 import { Outlet, useLocation } from 'react-router-dom'
 import { Menu, X } from 'lucide-react'
 import { Sidebar } from './Sidebar'
+import avatar from '@/assets/avatar.png'
 import { useLanguage } from '@/lib/language'
 
 /**
@@ -48,9 +49,7 @@ export function Layout() {
             {drawerOpen ? <X size={22} /> : <Menu size={22} />}
           </button>
           <div className="flex items-center gap-2">
-            <div className="w-7 h-7 rounded-lg bg-gradient-to-br from-[#7B5EA7] to-[#9B7EC8] flex items-center justify-center">
-              <span className="text-white text-xs font-bold">M</span>
-            </div>
+            <img src={avatar} alt="" className="w-7 h-7 rounded-lg object-cover" />
             <span className="font-display font-bold text-[14px] text-[#2D1F3D]">
               healthy <span className="text-[#7B5EA7]">Marta</span>
             </span>

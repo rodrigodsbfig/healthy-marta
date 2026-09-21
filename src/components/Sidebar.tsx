@@ -1,4 +1,5 @@
 import { NavLink } from 'react-router-dom'
+import avatar from '@/assets/avatar.png'
 import { cn } from '@/lib/utils'
 import { useLanguage } from '@/lib/language'
 import type { Lang } from '@/lib/translations'
@@ -38,9 +39,11 @@ export function Sidebar({ onNavigate }: SidebarProps = {}) {
       {/* Logo */}
       <div className="px-5 pt-6 pb-5">
         <div className="flex items-center gap-2.5">
-          <div className="w-8 h-8 rounded-xl bg-gradient-to-br from-[#7B5EA7] to-[#9B7EC8] flex items-center justify-center shadow-[0_2px_8px_0_#7B5EA740]">
-            <span className="text-white text-sm font-bold">M</span>
-          </div>
+          <img
+            src={avatar}
+            alt=""
+            className="w-8 h-8 rounded-xl object-cover shadow-[0_2px_8px_0_#7B5EA740]"
+          />
           <div>
             <span className="font-display font-bold text-[14px] text-[#2D1F3D] leading-none block">
               healthy
@@ -87,9 +90,11 @@ export function Sidebar({ onNavigate }: SidebarProps = {}) {
       <div className="p-4 space-y-3">
         {/* User info */}
         <div className="flex items-center gap-2.5">
-          <div className="w-8 h-8 rounded-full bg-gradient-to-br from-[#7B5EA7] to-[#9B7EC8] flex items-center justify-center shrink-0 shadow-[0_2px_6px_0_#7B5EA730]">
-            <span className="text-white text-xs font-semibold">M</span>
-          </div>
+          <img
+            src={avatar}
+            alt=""
+            className="w-8 h-8 rounded-full object-cover shrink-0 shadow-[0_2px_6px_0_#7B5EA730]"
+          />
           <div className="min-w-0">
             <p className="text-[13px] font-semibold text-[#2D1F3D] leading-tight">Marta</p>
             <p className="text-[10px] text-[#7A6775] truncate">marta@email.com</p>

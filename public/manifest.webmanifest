@@ -1,0 +1,17 @@
+{
+  "name": "Healthy Marta",
+  "short_name": "Marta",
+  "description": "Plano alimentar, receitas, compras e treinos da Marta",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#FDF8F2",
+  "theme_color": "#7B5EA7",
+  "lang": "pt-PT",
+  "icons": [
+    { "src": "/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "/apple-touch-icon.png", "sizes": "180x180", "type": "image/png" }
+  ]
+}
