@@ -34,6 +34,16 @@ export function RecipeDetail() {
   const viewMoment: MealMoment | undefined =
     pickedMoment ?? (urlMoment && moments.includes(urlMoment) ? urlMoment : moments[0])
 
+  // In prática mode the same dish covers several days. The recipe showed one
+  // portion with nothing to say "cook three" — exactly the arithmetic the
+  // batch-cooking mode exists to remove.
+  const weekStart = searchParams.get('week')
+  const plan = useQuery(
+    api.functions.mealPlans.getByWeek,
+    weekStart ? { weekStart } : 'skip'
+  )
+  const plannedTimes = (plan?.slots ?? []).filter(s => s.recipeId === id).length
+
   const shownIngredients = recipe
     ? resolveIngredients(recipe.ingredients, viewMoment, recipe.comSopa ?? false)
     : []
@@ -166,6 +176,27 @@ export function RecipeDetail() {
                 {t('prep')} {recipe.prepTime} {t('min')} · {t('cook')} {recipe.cookTime} {t('min')} · {servings} {lang === 'pt' ? (servings === 1 ? 'porção' : 'porções') : (servings === 1 ? 'serving' : 'servings')}
               </p>
             </div>
+
+            {plannedTimes > 1 && scaledServings === null && (
+              <div className="flex items-start gap-2 mb-4 bg-[#E8F5EE] border border-[#2D9B5C]/30 rounded-xl px-3 py-2.5">
+                <ChefHat size={15} className="text-[#2D9B5C] shrink-0 mt-0.5" />
+                <div className="min-w-0">
+                  <p className="text-[13px] font-semibold text-[#2D1F3D]">
+                    {lang === 'pt'
+                      ? `Esta semana come isto ${plannedTimes}×`
+                      : `You eat this ${plannedTimes}× this week`}
+                  </p>
+                  <button
+                    onClick={() => setScaledServings((recipe.servings || 1) * plannedTimes)}
+                    className="text-[12px] font-semibold text-[#2D9B5C] hover:underline"
+                  >
+                    {lang === 'pt'
+                      ? `Mostrar quantidades para ${plannedTimes} porções →`
+                      : `Show quantities for ${plannedTimes} portions →`}
+                  </button>
+                </div>
+              </div>
+            )}
 
             {moments.length > 1 && (
               <div className="flex items-center gap-2 mb-4">

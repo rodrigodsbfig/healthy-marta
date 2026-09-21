@@ -40,6 +40,11 @@ export const create = mutation({
     tags: v.array(v.string()),
     imageUrl: v.optional(v.string()),
     nutrition: v.optional(nutritionValidator),
+    mealMoments: v.optional(v.array(v.union(
+      v.literal('acordar'), v.literal('pequenoAlmoco'), v.literal('meioDaManha'),
+      v.literal('almoco'), v.literal('lanche1'), v.literal('lanche2'),
+      v.literal('jantar'), v.literal('ceia'),
+    ))),
   },
   handler: async (ctx, args) => {
     return await ctx.db.insert('recipes', args)
@@ -59,6 +64,11 @@ export const update = mutation({
     tags: v.array(v.string()),
     imageUrl: v.optional(v.string()),
     nutrition: v.optional(nutritionValidator),
+    mealMoments: v.optional(v.array(v.union(
+      v.literal('acordar'), v.literal('pequenoAlmoco'), v.literal('meioDaManha'),
+      v.literal('almoco'), v.literal('lanche1'), v.literal('lanche2'),
+      v.literal('jantar'), v.literal('ceia'),
+    ))),
   },
   handler: async (ctx, { id, ...fields }) => {
     await ctx.db.patch(id, fields)

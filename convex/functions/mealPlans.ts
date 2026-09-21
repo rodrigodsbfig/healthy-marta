@@ -2,6 +2,7 @@ import { query, mutation } from '../_generated/server'
 import { v } from 'convex/values'
 import type { Id } from '../_generated/dataModel'
 import { generateWeek } from '../lib/generateWeek'
+import { OPTIONS_BY_ID, PLAN_RULES } from '../lib/plan'
 
 /** Kept in sync with MEAL_MOMENTS in convex/lib/plan.ts. */
 const mealType = v.union(
@@ -121,5 +122,80 @@ export const generate = mutation({
     else await ctx.db.insert('mealPlans', doc)
 
     return { notes: result.notes, warnings: result.warnings, mealsPlanned: slots.length }
+  },
+})
+
+/**
+ * Replace one meal with a different compliant dish, leaving the rest of the
+ * week alone.
+ *
+ * Regenerating the whole week to change one dinner throws away every other
+ * choice she was happy with. Candidates are filtered the same way the weekly
+ * generator filters: right moment, not disliked, and not already eaten that
+ * day.
+ */
+export const swapSlot = mutation({
+  args: {
+    weekStart: v.string(),
+    day: v.number(),
+    meal: mealType,
+  },
+  handler: async (ctx, { weekStart, day, meal }) => {
+    const plan = await ctx.db
+      .query('mealPlans')
+      .filter((q) => q.eq(q.field('weekStart'), weekStart))
+      .first()
+    if (!plan) return { swapped: false, reason: 'no-plan' as const }
+
+    const current = plan.slots.find((s) => s.day === day && s.meal === meal)
+    if (!current) return { swapped: false, reason: 'no-slot' as const }
+
+    const prefs = await ctx.db.query('preferences').first()
+    const dislikes = (prefs?.dislikes ?? []).map((d) => d.toLowerCase())
+    const eatenToday = new Set(
+      plan.slots.filter((s) => s.day === day).map((s) => s.recipeId as string)
+    )
+
+    const recipes = await ctx.db.query('recipes').collect()
+    const byId = new Map(recipes.map((r) => [r._id as string, r]))
+    const tagsOf = (r: typeof recipes[number]) =>
+      (r.planComponents ?? []).flatMap((c) => OPTIONS_BY_ID[c.optionId]?.tags ?? [])
+
+    // A swap must obey the same plan limits as a full generation. Without
+    // this, swapping repeatedly is a way to walk straight past the weekly
+    // red-meat cap one dinner at a time.
+    const redMeatElsewhere = plan.slots.filter((s) => {
+      if (s.day === day && s.meal === meal) return false
+      const r = byId.get(s.recipeId as string)
+      return r ? tagsOf(r).includes('carneVermelha') : false
+    }).length
+    const redMeatLeft = PLAN_RULES.carneVermelhaMaxPorSemana - redMeatElsewhere
+
+    const eggToday = plan.slots.some((s) => {
+      if (s.day !== day || s.meal === meal) return false
+      const r = byId.get(s.recipeId as string)
+      return r ? tagsOf(r).includes('ovo') : false
+    })
+
+    const candidates = recipes.filter((r) => {
+      if (!(r.mealMoments ?? []).includes(meal)) return false
+      if ((r._id as string) === (current.recipeId as string)) return false
+      if (eatenToday.has(r._id as string)) return false
+      const tags = tagsOf(r)
+      if (tags.includes('carneVermelha') && redMeatLeft <= 0) return false
+      if (tags.includes('ovo') && eggToday) return false
+      const haystack = [r.title, ...r.ingredients.map((i) => i.name)].join(' ').toLowerCase()
+      if (dislikes.some((d) => d && haystack.includes(d))) return false
+      return true
+    })
+
+    if (candidates.length === 0) return { swapped: false, reason: 'no-alternative' as const }
+
+    const pick = candidates[Math.floor(Math.random() * candidates.length)]
+    const slots = plan.slots.map((s) =>
+      s.day === day && s.meal === meal ? { ...s, recipeId: pick._id } : s
+    )
+    await ctx.db.patch(plan._id, { slots })
+    return { swapped: true, title: pick.title }
   },
 })

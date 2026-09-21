@@ -4,7 +4,8 @@ import { api } from '../../convex/_generated/api'
 import { X, Plus, Trash2 } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { useLanguage } from '@/lib/language'
-import { TAG_KEYS, translateTag } from '@/lib/translations'
+import { TAG_KEYS, translateTag, MEAL_LABELS } from '@/lib/translations'
+import { MEAL_MOMENTS, type MealMoment } from '@/lib/mealMoments'
 import type { Id } from '../../convex/_generated/dataModel'
 
 type Ingredient = { name: string; quantity: string; unit: string }
@@ -21,6 +22,7 @@ type RecipeData = {
   steps: string[]
   tags: string[]
   nutrition?: { calories: number; protein: number; carbs: number; fat: number }
+  mealMoments?: string[]
 }
 
 type RecipePrefill = Omit<RecipeData, '_id'>
@@ -58,6 +60,7 @@ export function RecipeForm({ open, onClose, existing, prefill }: RecipeFormProps
   const [ingredients, setIngredients] = useState<Ingredient[]>([{ name: '', quantity: '', unit: 'g' }])
   const [steps, setSteps] = useState<string[]>([''])
   const [tags, setTags] = useState<string[]>([])
+  const [moments, setMoments] = useState<MealMoment[]>([])
   const [nutrition, setNutrition] = useState<Nutrition>({ calories: '', protein: '', carbs: '', fat: '' })
   const [saving, setSaving] = useState(false)
 
@@ -72,6 +75,7 @@ export function RecipeForm({ open, onClose, existing, prefill }: RecipeFormProps
       setIngredients(source.ingredients.map(i => ({ name: i.name, quantity: String(i.quantity), unit: i.unit })))
       setSteps(source.steps.length ? source.steps : [''])
       setTags(source.tags)
+      setMoments((source.mealMoments ?? []) as MealMoment[])
       setNutrition({
         calories: String(source.nutrition?.calories ?? ''),
         protein:  String(source.nutrition?.protein  ?? ''),
@@ -103,6 +107,10 @@ export function RecipeForm({ open, onClose, existing, prefill }: RecipeFormProps
     setTags(prev => prev.includes(tag) ? prev.filter(t => t !== tag) : [...prev, tag])
   }
 
+  function toggleMoment(m: MealMoment) {
+    setMoments(prev => prev.includes(m) ? prev.filter(x => x !== m) : [...prev, m])
+  }
+
   async function handleSave() {
     if (!title.trim()) return
     setSaving(true)
@@ -118,6 +126,9 @@ export function RecipeForm({ open, onClose, existing, prefill }: RecipeFormProps
           .map(i => ({ name: i.name.trim(), quantity: Number(i.quantity) || 0, unit: i.unit })),
         steps: steps.filter(s => s.trim()),
         tags,
+        // Without this a recipe is invisible to the weekly generator — it
+        // sits in the library and is never picked, with nothing to explain why.
+        mealMoments: moments.length > 0 ? moments : undefined,
         nutrition: nutrition.calories
           ? {
               calories: Number(nutrition.calories) || 0,
@@ -205,6 +216,32 @@ export function RecipeForm({ open, onClose, existing, prefill }: RecipeFormProps
               <input type="number" min="0" className={inputClass} value={cookTime} onChange={e => setCookTime(e.target.value)} />
             </Field>
           </div>
+
+          {/* Meal moments — what makes a recipe eligible for generation */}
+          <Field label={lang === 'pt' ? 'Em que refeições?' : 'Which meals?'}>
+            <p className="text-[11px] text-[#7A6775] mb-2 -mt-1">
+              {lang === 'pt'
+                ? 'Só as receitas com refeições marcadas entram nas semanas geradas.'
+                : 'Only recipes with meals marked are used when generating a week.'}
+            </p>
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+              {MEAL_MOMENTS.map(m => (
+                <button
+                  key={m}
+                  type="button"
+                  onClick={() => toggleMoment(m)}
+                  className={cn(
+                    'text-[11px] font-semibold py-1.5 px-2 rounded-xl border transition-colors leading-tight min-h-[34px] flex items-center justify-center text-center',
+                    moments.includes(m)
+                      ? 'bg-[#7B5EA7] text-white border-[#7B5EA7]'
+                      : 'bg-[#FDF8F2] text-[#7A6775] border-[#E8D9C8] hover:border-[#7B5EA7]',
+                  )}
+                >
+                  {MEAL_LABELS[lang][m]}
+                </button>
+              ))}
+            </div>
+          </Field>
 
           {/* Tags */}
           <Field label={t('tags_label')}>

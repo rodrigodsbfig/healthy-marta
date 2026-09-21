@@ -10,10 +10,6 @@ import { v } from 'convex/values'
  * intake without a target.
  */
 
-async function getDoc(ctx: { db: { query: (t: 'preferences') => { first: () => Promise<unknown> } } }) {
-  return await ctx.db.query('preferences').first()
-}
-
 export const get = query({
   args: {},
   handler: async (ctx) => {
@@ -92,5 +88,3 @@ export const excludedRecipes = query({
     return out
   },
 })
-
-export { getDoc }

@@ -140,7 +140,7 @@ const PEQUENO_ALMOCO: SeedRecipe[] = [
       'Deita porções pequenas da massa e cozinha 2 minutos de cada lado, até dourar.',
       'Serve com a manteiga de amendoim por cima e o café.',
     ],
-    tags: ['Breakfast', 'High Protein'],
+    tags: ['High Protein'],
   },
   {
     title: 'Papas de aveia com banana',
@@ -161,7 +161,7 @@ const PEQUENO_ALMOCO: SeedRecipe[] = [
       'Serve com a banana às rodelas por cima.',
       'Em alternativa: mistura tudo à noite e deixa no frigorífico até de manhã.',
     ],
-    tags: ['Breakfast', 'Vegetarian'],
+    tags: ['Vegetarian'],
   },
   {
     title: 'Tosta de abacate e ovo escalfado',
@@ -184,7 +184,7 @@ const PEQUENO_ALMOCO: SeedRecipe[] = [
       'Parte o ovo numa taça, deita na água em rodopio e escalfa 3 minutos.',
       'Barra o abacate na tosta e coloca o ovo escalfado por cima.',
     ],
-    tags: ['Breakfast', 'High Protein'],
+    tags: ['High Protein'],
   },
   {
     title: 'Crepioca',
@@ -202,7 +202,7 @@ const PEQUENO_ALMOCO: SeedRecipe[] = [
       'Deita numa frigideira antiaderente quente e espalha como um crepe.',
       'Ao fim de 2 minutos vira, recheia com o queijo fresco e dobra ao meio.',
     ],
-    tags: ['Breakfast', 'Gluten-Free', 'High Protein'],
+    tags: ['Gluten-Free', 'High Protein'],
   },
   {
     title: 'Iogurte proteico com granola e frutos vermelhos',
@@ -219,7 +219,7 @@ const PEQUENO_ALMOCO: SeedRecipe[] = [
       'Deita o iogurte numa taça.',
       'Junta a granola, as nozes partidas e os frutos vermelhos por cima.',
     ],
-    tags: ['Breakfast', 'High Protein'],
+    tags: ['High Protein'],
   },
   {
     title: 'Pão com queijo fresco e abacate',
@@ -237,7 +237,7 @@ const PEQUENO_ALMOCO: SeedRecipe[] = [
       'Barra com o queijo fresco e dispõe o abacate às fatias.',
       'Tempera com orégãos e um fio de limão.',
     ],
-    tags: ['Breakfast', 'Vegetarian'],
+    tags: ['Vegetarian'],
   },
 ]
 
@@ -255,7 +255,7 @@ const MEIO_DA_MANHA: SeedRecipe[] = [
       { optionId: 'mm-iogurte-magro', as: 'iogurte magro 0%', macroKey: 'iogurte magro', units: 1 },
     ],
     steps: ['Corta a fruta e come com o iogurte.'],
-    tags: ['Snack'],
+    tags: [],
   },
   {
     title: 'Batido de fruta com bebida vegetal',
@@ -270,7 +270,7 @@ const MEIO_DA_MANHA: SeedRecipe[] = [
       'Junta a fruta e a bebida vegetal no copo da varinha.',
       'Tritura até ficar liso e leva num frasco fechado.',
     ],
-    tags: ['Snack', 'Vegan'],
+    tags: ['Vegan'],
   },
   {
     title: 'Palitos de legumes com babybel',
@@ -281,7 +281,7 @@ const MEIO_DA_MANHA: SeedRecipe[] = [
       { optionId: 'mm-babybel', as: 'babybel light', macroKey: 'babybel light', units: 1 },
     ],
     steps: ['Corta os legumes em palitos e leva num recipiente com o queijo.'],
-    tags: ['Snack', 'Low Carb'],
+    tags: ['Low Carb'],
   },
 ]
 
@@ -312,7 +312,7 @@ const REFEICOES: SeedRecipe[] = [
       'Grelha o salmão 4 minutos de cada lado numa grelha bem quente.',
       'Serve com o azeite cru por cima dos legumes.',
     ],
-    tags: ['Lunch', 'Dinner', 'High Protein'],
+    tags: ['High Protein'],
   },
   {
     title: 'Frango grelhado com quinoa e salada',
@@ -336,7 +336,7 @@ const REFEICOES: SeedRecipe[] = [
       'Tempera a salada com o azeite e o vinagre.',
       'Deixa o frango repousar 2 minutos antes de cortar.',
     ],
-    tags: ['Lunch', 'Dinner', 'High Protein'],
+    tags: ['High Protein'],
   },
   {
     title: 'Atum com batata doce e legumes salteados',
@@ -358,7 +358,7 @@ const REFEICOES: SeedRecipe[] = [
       'Escorre bem o atum e junta aos legumes fora do lume.',
       'Serve com a batata doce e salsa picada.',
     ],
-    tags: ['Lunch', 'Dinner', 'High Protein'],
+    tags: ['High Protein'],
   },
   {
     title: 'Tofu salteado com bulgur e legumes',
@@ -381,7 +381,7 @@ const REFEICOES: SeedRecipe[] = [
       'Junta os legumes e o gengibre e salteia mais 4 minutos.',
       'Tempera com o molho de soja fora do lume.',
     ],
-    tags: ['Lunch', 'Dinner', 'Vegetarian'],
+    tags: ['Vegetarian'],
   },
   {
     title: 'Bife de vaca com massa e legumes refogados',
@@ -403,7 +403,7 @@ const REFEICOES: SeedRecipe[] = [
       'Aquece bem uma frigideira e sela o bife 2 a 3 minutos de cada lado.',
       'Deixa o bife repousar antes de servir.',
     ],
-    tags: ['Lunch', 'Dinner', 'High Protein'],
+    tags: ['High Protein'],
   },
   {
     title: 'Pescada cozida com batata e legumes',
@@ -425,7 +425,7 @@ const REFEICOES: SeedRecipe[] = [
       'Adiciona a pescada e a couve e coze mais 8 minutos.',
       'Escorre e tempera à mesa com o azeite, o alho picado e o vinagre.',
     ],
-    tags: ['Lunch', 'Dinner'],
+    tags: [],
   },
   {
     title: 'Omelete de dois ovos com arroz e salada',
@@ -447,7 +447,7 @@ const REFEICOES: SeedRecipe[] = [
       'Cozinha em lume médio até o fundo ficar firme e dobra ao meio.',
       'Serve com o arroz e a salada temperada.',
     ],
-    tags: ['Lunch', 'Dinner', 'Vegetarian'],
+    tags: ['Vegetarian'],
   },
   {
     title: 'Peru grelhado com trigo sarraceno e legumes',
@@ -469,7 +469,7 @@ const REFEICOES: SeedRecipe[] = [
       'Grelha 4 minutos de cada lado.',
       'Salteia o feijão verde no azeite 5 minutos.',
     ],
-    tags: ['Lunch', 'Dinner', 'High Protein'],
+    tags: ['High Protein'],
   },
   {
     title: 'Dourada no forno com inhame e salada',
@@ -492,7 +492,7 @@ const REFEICOES: SeedRecipe[] = [
       'Coze o inhame em água com sal, cerca de 15 minutos. Pesa depois de cozido.',
       'Tempera a salada com o azeite.',
     ],
-    tags: ['Lunch', 'Dinner'],
+    tags: [],
   },
   {
     title: 'Frango com amaranto e legumes assados',
@@ -513,7 +513,7 @@ const REFEICOES: SeedRecipe[] = [
       'Coloca o frango por cima e leva ao forno 25 a 30 minutos.',
       'Coze o amaranto em água 20 minutos. Pesa depois de cozido.',
     ],
-    tags: ['Lunch', 'Dinner', 'High Protein'],
+    tags: ['High Protein'],
   },
 ]
 
@@ -532,7 +532,7 @@ const LANCHE_1: SeedRecipe[] = [
     ],
     extras: [{ name: 'orégãos', quantity: 1, unit: 'pitada' }],
     steps: ['Barra o queijo fresco nas tostas e polvilha com orégãos.'],
-    tags: ['Snack'],
+    tags: [],
   },
   {
     title: 'Pão com philadelphia e tomate',
@@ -544,7 +544,7 @@ const LANCHE_1: SeedRecipe[] = [
     ],
     extras: [{ name: 'tomate', quantity: 1, unit: 'unidade' }],
     steps: ['Barra o pão com o queijo e cobre com rodelas finas de tomate.'],
-    tags: ['Snack'],
+    tags: [],
   },
   {
     title: 'Tortilhas de milho com vaca que ri',
@@ -555,7 +555,7 @@ const LANCHE_1: SeedRecipe[] = [
       { optionId: 'l1-vaca-que-ri', as: 'vaca que ri light', macroKey: 'vaca que ri light', units: 1 },
     ],
     steps: ['Barra as tortilhas com o queijo.'],
-    tags: ['Snack'],
+    tags: [],
   },
   {
     title: 'Iogurte proteico com granola',
@@ -566,7 +566,7 @@ const LANCHE_1: SeedRecipe[] = [
       { optionId: 'l1-iogurte-proteico', as: 'iogurte proteico', macroKey: 'iogurte proteico', units: 1 },
     ],
     steps: ['Mistura a granola no iogurte.'],
-    tags: ['Snack', 'High Protein'],
+    tags: ['High Protein'],
   },
   {
     title: 'Marinheiras com tremoços',
@@ -577,7 +577,7 @@ const LANCHE_1: SeedRecipe[] = [
       { optionId: 'l1-tremocos', as: 'tremoços', macroKey: 'tremoços' },
     ],
     steps: ['Escorre bem os tremoços e come com as marinheiras.'],
-    tags: ['Snack', 'Vegan'],
+    tags: ['Vegan'],
   },
 ]
 
@@ -595,7 +595,7 @@ const LANCHE_2: SeedRecipe[] = [
       { optionId: 'l2-fruta', as: 'fruta da época', macroKey: 'fruta' },
     ],
     steps: ['Pesa os frutos secos — 10g é cerca de uma mão fechada pequena.'],
-    tags: ['Snack', 'Vegan'],
+    tags: ['Vegan'],
   },
   {
     title: 'Chocolate negro com fruta',
@@ -606,7 +606,7 @@ const LANCHE_2: SeedRecipe[] = [
       { optionId: 'l2-fruta', as: 'fruta da época', macroKey: 'fruta' },
     ],
     steps: ['Come devagar, a saborear — é o conselho da própria nutricionista.'],
-    tags: ['Snack'],
+    tags: [],
   },
   {
     title: 'Gelado 100% fruta com chocolate',
@@ -617,7 +617,7 @@ const LANCHE_2: SeedRecipe[] = [
       { optionId: 'l2-gelado', as: 'gelado 100% fruta', macroKey: 'gelado de fruta', units: 1 },
     ],
     steps: ['Serve o gelado com o quadrado de chocolate ralado por cima.'],
-    tags: ['Snack'],
+    tags: [],
   },
 ]
 
@@ -628,7 +628,7 @@ const CEIA: SeedRecipe[] = [
     moments: ['ceia'], prepTime: 3, cookTime: 0,
     components: [{ optionId: 'ce-cha', as: 'chá', macroKey: 'chá', units: 1 }],
     steps: ['Deixa a infusão 4 minutos e bebe sem açúcar.'],
-    tags: ['Snack'],
+    tags: [],
   },
   {
     title: 'Iogurte proteico',
@@ -636,7 +636,7 @@ const CEIA: SeedRecipe[] = [
     moments: ['ceia'], prepTime: 1, cookTime: 0,
     components: [{ optionId: 'ce-iogurte', as: 'iogurte proteico', macroKey: 'iogurte proteico', units: 1 }],
     steps: ['Come o iogurte.'],
-    tags: ['Snack', 'High Protein'],
+    tags: ['High Protein'],
   },
   {
     title: 'Pudim proteico',
@@ -644,7 +644,7 @@ const CEIA: SeedRecipe[] = [
     moments: ['ceia'], prepTime: 1, cookTime: 0,
     components: [{ optionId: 'ce-pudim', as: 'pudim proteico', macroKey: 'pudim proteico', units: 1 }],
     steps: ['Serve metade da unidade.'],
-    tags: ['Snack', 'High Protein'],
+    tags: ['High Protein'],
   },
 ]
 

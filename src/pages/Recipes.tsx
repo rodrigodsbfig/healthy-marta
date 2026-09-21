@@ -1,11 +1,12 @@
 import { useState } from 'react'
 import { useQuery } from 'convex/react'
 import { useNavigate } from 'react-router-dom'
-import { Plus, Search, Clock, ChefHat, ChevronDown } from 'lucide-react'
+import { Plus, Search, Clock, ChefHat, ChevronDown, AlertTriangle } from 'lucide-react'
 import { api } from '../../convex/_generated/api'
 import { cn } from '@/lib/utils'
 import { useLanguage } from '@/lib/language'
-import { translateTag } from '@/lib/translations'
+import { MEAL_LABELS, translateTag } from '@/lib/translations'
+import { MEAL_MOMENTS, type MealMoment } from '@/lib/mealMoments'
 import { RecipeForm } from '@/components/RecipeForm'
 import { RecipeImport } from '@/components/RecipeImport'
 
@@ -51,6 +52,9 @@ export function Recipes() {
 
   // Collect all unique tags
   const allTags = [...new Set((recipes ?? []).flatMap(r => r.tags))].sort()
+  const usedMoments = MEAL_MOMENTS.filter(m =>
+    (recipes ?? []).some(r => (r.mealMoments ?? []).includes(m))
+  )
 
   const SORT_OPTIONS: { key: SortKey; label: string }[] = [
     { key: 'default',  label: t('sort_default')  },
@@ -63,7 +67,9 @@ export function Recipes() {
     .filter(r =>
       (r.title.toLowerCase().includes(search.toLowerCase()) ||
        r.tags.some(tag => tag.toLowerCase().includes(search.toLowerCase()))) &&
-      (activeTag === null || r.tags.includes(activeTag))
+      (activeTag === null
+        || r.tags.includes(activeTag)
+        || (r.mealMoments ?? []).includes(activeTag as MealMoment))
     )
     .sort((a, b) => {
       if (sortBy === 'protein')  return (b.nutrition?.protein  ?? 0)   - (a.nutrition?.protein  ?? 0)
@@ -152,7 +158,7 @@ export function Recipes() {
         </div>
 
         {/* Tag filter chips */}
-        {allTags.length > 0 && (
+        {(allTags.length > 0 || usedMoments.length > 0) && (
           <div className="flex gap-2 overflow-x-auto pb-0.5 scrollbar-hide">
             <button
               onClick={() => setActiveTag(null)}
@@ -165,6 +171,20 @@ export function Recipes() {
             >
               {t('all_tags')}
             </button>
+            {usedMoments.map(m => (
+              <button
+                key={m}
+                onClick={() => setActiveTag(activeTag === m ? null : m)}
+                className={cn(
+                  'shrink-0 text-[12px] font-semibold px-3.5 py-1.5 rounded-full border transition-colors',
+                  activeTag === m
+                    ? 'bg-[#7B5EA7] text-white border-[#7B5EA7]'
+                    : 'bg-white text-[#7A6775] border-[#E8D9C8] hover:border-[#7B5EA7]',
+                )}
+              >
+                {MEAL_LABELS[lang][m]}
+              </button>
+            ))}
             {allTags.map(tag => (
               <button
                 key={tag}
@@ -221,6 +241,20 @@ export function Recipes() {
                   </div>
                   <div className="p-4 space-y-2">
                     <h3 className="font-display font-bold text-sm text-[#2D1F3D] leading-snug">{r.title}</h3>
+                    {(r.mealMoments ?? []).length === 0 && (
+                      // A recipe with no meal moments can never be picked by the
+                      // generator. Said plainly here, because the alternative is
+                      // it silently never appearing in a generated week.
+                      <span
+                        title={lang === 'pt'
+                          ? 'Escolhe em que refeições esta receita pode entrar para ser usada nas semanas geradas.'
+                          : 'Pick which meals this recipe fits so it can be used when generating a week.'}
+                        className="inline-flex items-center gap-1 text-[10px] font-semibold text-[#E89B6C] bg-[#FFF3E8] border border-[#E89B6C]/40 px-2 py-0.5 rounded-full"
+                      >
+                        <AlertTriangle size={9} />
+                        {lang === 'pt' ? 'sem refeição definida' : 'no meal set'}
+                      </span>
+                    )}
                     {r.tags.length > 0 && (
                       <div className="flex gap-1.5 flex-wrap">
                         {r.tags.slice(0, 3).map(tag => (

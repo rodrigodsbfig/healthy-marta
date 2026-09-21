@@ -96,16 +96,6 @@ export default defineSchema({
     refeicaoLivreDay: v.optional(v.number()),
   }).index('by_user_week', ['userId', 'weekStart']),
 
-  prepSessions: defineTable({
-    userId: v.optional(v.id('users')),
-    weekStart: v.string(),
-    items: v.array(v.object({
-      recipeId: v.id('recipes'),
-      servings: v.number(),
-      completed: v.boolean(),
-    })),
-  }).index('by_week', ['weekStart']),
-
   shoppingLists: defineTable({
     userId: v.optional(v.id('users')),
     mealPlanId: v.optional(v.id('mealPlans')),
@@ -169,21 +159,6 @@ export default defineSchema({
   })
     .index('by_date', ['date'])
     .index('by_user_date', ['userId', 'date']),
-
-  /**
-   * Items Marta buys every week regardless of what is planned (azeite, café,
-   * ovos…). These are appended to every generated shopping list so she does
-   * not have to remember them.
-   */
-  staples: defineTable({
-    userId: v.optional(v.id('users')),
-    name: v.string(),
-    quantity: v.optional(v.number()),
-    unit: v.optional(v.string()),
-    category: v.optional(v.string()),
-    /** Unticked staples stay in the list but are skipped when generating. */
-    active: v.boolean(),
-  }).index('by_user', ['userId']),
 
   nutritionLogs: defineTable({
     userId: v.optional(v.id('users')),

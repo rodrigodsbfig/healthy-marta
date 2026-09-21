@@ -1,25 +1,7 @@
 import { query, mutation } from '../_generated/server'
 import { v } from 'convex/values'
+import { categorise } from '../lib/aisles'
 import { equivalentOption, amountFor, type MealMoment } from '../lib/plan'
-
-/**
- * Supermarket aisle for an ingredient.
- *
- * Portuguese first, because every recipe in the library is written in
- * Portuguese — an English-only matcher put the entire list under "Other".
- * English terms are kept so hand-typed items still land somewhere sensible.
- */
-function categorise(name: string): string {
-  const n = name.toLowerCase()
-  if (/salm[ãa]o|pescada|dourada|atum|bacalhau|peixe|marisco|camar[ãa]o|fish|salmon|tuna/.test(n)) return 'Peixe'
-  if (/frango|peru|vaca|bife|porco|carne|presunto|fiambre|chicken|beef|turkey|pork/.test(n)) return 'Carne'
-  if (/ovo|clara|queijo|iogurte|babybel|vaca que ri|philadelphia|requeij[ãa]o|manteiga|leite|natas|egg|cheese|yogurt/.test(n)) return 'Frescos'
-  if (/legume|salada|br[óo]colo|couve|cenoura|tomate|alface|pepino|courgette|curgete|pimento|ab[óo]bora|espinafre|cebola|alho|feij[ãa]o verde|fruta|banana|ma[çc][ãa]|laranja|lim[ãa]o|morango|frutos vermelhos|abacate|vegetable|fruit/.test(n)) return 'Frutas e Legumes'
-  if (/p[ãa]o|tosta|marinheira|tortilha|tortita|bread|toast/.test(n)) return 'Padaria'
-  if (/arroz|massa|quinoa|bulgur|amaranto|trigo|aveia|granola|cereai|tapioca|polvilho|batata|inhame|lentilha|gr[ãa]o|tremo[çc]o|rice|pasta|oat/.test(n)) return 'Mercearia'
-  if (/azeite|[óo]leo|vinagre|molho|sal|pimenta|especiaria|canela|or[ée]g[ãa]os|salsa|tomilho|alecrim|louro|gengibre|soja|chocolate|frutos secos|semente|noz|amendoim|caf[ée]|ch[áa]|bebida vegetal|sopa|gelado|pudim|oil|sauce|spice/.test(n)) return 'Mercearia'
-  return 'Outros'
-}
 
 /**
  * Seasonings measured to taste carry no useful quantity. Summing them across

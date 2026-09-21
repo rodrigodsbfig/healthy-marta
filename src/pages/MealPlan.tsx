@@ -1,7 +1,7 @@
 import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import { useQuery, useMutation } from 'convex/react'
-import { ChevronLeft, ChevronRight, Plus, X, PartyPopper } from 'lucide-react'
+import { ChevronLeft, ChevronRight, Plus, X, PartyPopper, Shuffle } from 'lucide-react'
 import { api } from '../../convex/_generated/api'
 import type { Id } from '../../convex/_generated/dataModel'
 import { cn } from '@/lib/utils'
@@ -26,9 +26,33 @@ export function MealPlan() {
   const plan = useQuery(api.functions.mealPlans.getByWeek, { weekStart })
   const addSlot = useMutation(api.functions.mealPlans.addSlot)
   const removeSlot = useMutation(api.functions.mealPlans.removeSlot)
+  const swapSlot = useMutation(api.functions.mealPlans.swapSlot)
+  const [swapping, setSwapping] = useState<MealType | null>(null)
+  const [swapMsg, setSwapMsg] = useState<string | null>(null)
+
+  async function handleSwap(meal: MealType) {
+    setSwapping(meal)
+    setSwapMsg(null)
+    try {
+      const res = await swapSlot({ weekStart, day: selectedDay, meal })
+      if (!res.swapped) {
+        setSwapMsg(lang === 'pt'
+          ? 'Sem alternativa compatível para esta refeição.'
+          : 'No compatible alternative for this meal.')
+        setTimeout(() => setSwapMsg(null), 3500)
+      }
+    } finally {
+      setSwapping(null)
+    }
+  }
 
   const allRecipes = useQuery(api.functions.recipes.list)
   const recipeMap = new Map(allRecipes?.map(r => [r._id, r]) ?? [])
+
+  /** How many recipes could fill a moment. One means nothing to swap to. */
+  function alternativesFor(meal: MealType) {
+    return (allRecipes ?? []).filter(r => (r.mealMoments ?? []).includes(meal)).length
+  }
 
   const days = weekDays(weekStart)
   const slotsForDay = (plan?.slots ?? []).filter(s => s.day === selectedDay)
@@ -159,6 +183,11 @@ export function MealPlan() {
             </div>
           ) : (
             <div className="space-y-3">
+              {swapMsg && (
+                <p className="text-[12px] text-[#E89B6C] bg-[#FFF3E8] border border-[#E89B6C]/40 rounded-xl px-3 py-2">
+                  {swapMsg}
+                </p>
+              )}
               {MEAL_ORDER
                 .filter(m => slotsForDay.some(s => s.meal === m) || (m === 'jantar' && isRefeicaoLivreDay))
                 .map(mealType => {
@@ -195,7 +224,7 @@ export function MealPlan() {
                       <div className={cn('w-2.5 h-2.5 rounded-full', colors.dot)} />
                     </div>
                     <Link
-                      to={`/recipes/${slot.recipeId}?moment=${mealType}`}
+                      to={`/recipes/${slot.recipeId}?moment=${mealType}&week=${weekStart}`}
                       className="flex-1 min-w-0"
                     >
                       <p className="text-[11px] text-[#7A6775] mb-0.5">
@@ -211,9 +240,27 @@ export function MealPlan() {
                         </p>
                       )}
                     </Link>
+                    {/* Offered only where an alternative exists — the water at
+                        Acordar has exactly one recipe, so a swap button there
+                        could never do anything. Each label names its meal, so
+                        the eight buttons are distinguishable. */}
+                    {alternativesFor(mealType) > 1 && (
+                      <button
+                        onClick={() => handleSwap(mealType)}
+                        disabled={swapping === mealType}
+                        aria-label={
+                          (lang === 'pt' ? 'Trocar ' : 'Swap ') + MEAL_LABELS[lang][mealType]
+                        }
+                        title={lang === 'pt' ? 'Trocar por outra receita' : 'Swap for another recipe'}
+                        className="text-[#C9B8D9] hover:text-[#7B5EA7] transition-all shrink-0 md:opacity-0 md:group-hover:opacity-100 disabled:opacity-40"
+                      >
+                        <Shuffle size={15} className={swapping === mealType ? 'animate-spin' : ''} />
+                      </button>
+                    )}
                     <button
                       onClick={() => handleRemove(mealType)}
-                      className="opacity-0 group-hover:opacity-100 text-[#E8D9C8] hover:text-red-400 transition-all"
+                      aria-label={(lang === 'pt' ? 'Remover ' : 'Remove ') + MEAL_LABELS[lang][mealType]}
+                      className="text-[#E8D9C8] hover:text-red-400 transition-all shrink-0 md:opacity-0 md:group-hover:opacity-100"
                     >
                       <X size={16} />
                     </button>

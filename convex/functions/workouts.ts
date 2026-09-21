@@ -1,15 +1,6 @@
 import { query, mutation } from '../_generated/server'
 import { v } from 'convex/values'
 
-/** Workouts between two ISO dates, inclusive. Used by the month calendar. */
-export const listRange = query({
-  args: { from: v.string(), to: v.string() },
-  handler: async (ctx, { from, to }) => {
-    const all = await ctx.db.query('workouts').collect()
-    return all.filter((w) => w.date >= from && w.date <= to)
-  },
-})
-
 export const listAll = query({
   args: {},
   handler: async (ctx) => await ctx.db.query('workouts').collect(),

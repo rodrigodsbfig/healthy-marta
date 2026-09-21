@@ -3,8 +3,10 @@ import { PLAN } from '../../convex/lib/plan'
 export type Lang = 'en' | 'pt'
 
 // Tag display names: values are stored as English in DB, displayed translated
+// Dietary tags only. Meal type used to live here too ('Breakfast', 'Lunch'…),
+// duplicating mealMoments — the recipe form asked the same question twice, in
+// two vocabularies, one of which the generator ignored.
 export const TAG_KEYS = [
-  'Breakfast', 'Lunch', 'Dinner', 'Snack',
   'Vegetarian', 'Vegan', 'High Protein', 'Low Carb', 'Gluten-Free', 'Dairy-Free',
 ] as const
 
@@ -12,10 +14,6 @@ export type TagKey = typeof TAG_KEYS[number]
 
 const tagTranslations: Record<Lang, Record<TagKey, string>> = {
   en: {
-    'Breakfast':    'Breakfast',
-    'Lunch':        'Lunch',
-    'Dinner':       'Dinner',
-    'Snack':        'Snack',
     'Vegetarian':   'Vegetarian',
     'Vegan':        'Vegan',
     'High Protein': 'High Protein',
@@ -24,10 +22,6 @@ const tagTranslations: Record<Lang, Record<TagKey, string>> = {
     'Dairy-Free':   'Dairy-Free',
   },
   pt: {
-    'Breakfast':    'Pequeno-Almoço',
-    'Lunch':        'Almoço',
-    'Dinner':       'Jantar',
-    'Snack':        'Lanche',
     'Vegetarian':   'Vegetariano',
     'Vegan':        'Vegan',
     'High Protein': 'Rico em Proteína',
@@ -66,10 +60,8 @@ const en = {
   nav_meal_plan:     'Meal Plan',
   nav_recipes:       'Recipes',
   nav_shopping:      'Shopping List',
-  nav_profile:       'Profile',
   nav_settings:      'Settings',
   nav_workouts:      'Workouts',
-  nav_prep:          'Prep',
 
   // Common
   cancel:            'Cancel',
@@ -87,7 +79,6 @@ const en = {
   // Today page
   good_morning:      'Good morning',
   log_a_meal:        'Log a meal',
-  todays_menu:       "Today's Menu",
   todays_plan:       "Today's Plan",
   logged_meals:      'Logged',
   no_planned_meals:  'Nothing planned for today',
@@ -95,25 +86,16 @@ const en = {
   remaining:         'remaining',
   log:               'Log',
   this_week:         'This Week',
-  view_meal_plan:    'View meal plan',
   date_locale:       'en-GB',
 
   // Log meal modal
   log_meal_title:    'Log a meal',
   from_recipe:       'From recipe',
   manual_entry:      'Manual',
-  select_recipe:     'Select a recipe',
   log_confirm:       'Log meal',
   no_nutrition:      'No nutrition data',
 
   // Prep session
-  prep_session:      'Prep Session',
-  gen_prep:          'Generate from plan',
-  recipes_prepped:   'recipes prepped',
-  all_ingredients:   'All Ingredients',
-  no_prep_yet:       'No prep plan yet',
-  prep_hint:         'Generate a prep plan from your meal plan',
-  prepped:           'Prepped',
 
   // Recipe scaling
   adjust_servings:   'Servings',
@@ -239,7 +221,6 @@ const en = {
   sort_time:         'Quickest',
 
   // Weekly history
-  no_data:           '—',
 
   // Nutrition labels
   cal_label:         'Calories',
@@ -257,10 +238,8 @@ const pt: typeof en = {
   nav_meal_plan:     'Plano',
   nav_recipes:       'Receitas',
   nav_shopping:      'Compras',
-  nav_profile:       'Perfil',
   nav_settings:      'Definições',
   nav_workouts:      'Treinos',
-  nav_prep:          'Prep',
 
   cancel:            'Cancelar',
   delete:            'Eliminar',
@@ -276,7 +255,6 @@ const pt: typeof en = {
 
   good_morning:      'Bom dia',
   log_a_meal:        'Registar refeição',
-  todays_menu:       'Menu de Hoje',
   todays_plan:       'Plano de Hoje',
   logged_meals:      'Registado',
   no_planned_meals:  'Nada planeado para hoje',
@@ -284,23 +262,14 @@ const pt: typeof en = {
   remaining:         'restante',
   log:               'Registar',
   this_week:         'Esta Semana',
-  view_meal_plan:    'Ver plano de refeições',
   date_locale:       'pt-PT',
 
   log_meal_title:    'Registar refeição',
   from_recipe:       'De receita',
   manual_entry:      'Manual',
-  select_recipe:     'Selecionar receita',
   log_confirm:       'Registar refeição',
   no_nutrition:      'Sem dados nutricionais',
 
-  prep_session:      'Sessão de Prep',
-  gen_prep:          'Gerar do plano',
-  recipes_prepped:   'receitas preparadas',
-  all_ingredients:   'Todos os Ingredientes',
-  no_prep_yet:       'Sem plano de prep ainda',
-  prep_hint:         'Gera um plano de prep do teu plano de refeições',
-  prepped:           'Preparado',
 
   adjust_servings:   'Porções',
   scaled_note:       'Escalado',
@@ -417,7 +386,6 @@ const pt: typeof en = {
   sort_time:         'Mais rápido',
 
   // Weekly history
-  no_data:           '—',
 
   cal_label:         'Calorias',
   protein_label:     'Proteína',
